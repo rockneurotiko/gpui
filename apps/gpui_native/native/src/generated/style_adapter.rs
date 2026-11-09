@@ -58,5 +58,8 @@ pub(crate) fn style_to_core(wire: StyleAttrs) -> gpui_core::Style {
     style.border_radius = wire.border_radius;
     style.border_width = wire.border_width;
     style.border_color = wire.border_color;
+    style.hover_background = wire.hover_background;
+    style.hover_color = wire.hover_color;
+    style.hover_border_color = wire.hover_border_color;
     style
 }

@@ -330,7 +330,12 @@ defmodule GPUI.Schema do
       field: :border_color,
       type: :color,
       render: {:option_method, :border_color, :color}
-    }
+    },
+    # Hover colors are not rendered with the base style: the native container applies
+    # them through its hover state.
+    %Style{name: :hover_background, field: :hover_background, type: :color},
+    %Style{name: :hover_color, field: :hover_color, type: :color},
+    %Style{name: :hover_border_color, field: :hover_border_color, type: :color}
   ]
 
   @resources [

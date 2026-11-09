@@ -236,6 +236,15 @@ defmodule GPUI.Tailwind do
     end
   end
 
+  defp normalize_class("hover:bg-" <> color, acc),
+    do: color(acc, :hover_background, color, "hover:bg-")
+
+  defp normalize_class("hover:text-" <> color, acc),
+    do: color(acc, :hover_color, color, "hover:text-")
+
+  defp normalize_class("hover:border-" <> color, acc),
+    do: color(acc, :hover_border_color, color, "hover:border-")
+
   defp normalize_class("bg-" <> color, acc), do: color(acc, :background, color, "bg-")
   defp normalize_class("text-" <> size_or_color, acc), do: text(size_or_color, acc)
   defp normalize_class("leading-" <> value, acc), do: line_height(value, acc)

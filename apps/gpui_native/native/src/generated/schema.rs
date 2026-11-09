@@ -1038,6 +1038,9 @@ pub(crate) struct StyleAttrs {
     pub(crate) border_radius: Option<f32>,
     pub(crate) border_width: Option<f32>,
     pub(crate) border_color: Option<u32>,
+    pub(crate) hover_background: Option<u32>,
+    pub(crate) hover_color: Option<u32>,
+    pub(crate) hover_border_color: Option<u32>,
 }
 #[cfg(feature = "real-gpui")]
 pub(crate) fn full_length() -> gpui::DefiniteLength {
@@ -1382,6 +1385,24 @@ pub(crate) fn apply_generated_style_attr<'a>(
             let value = color_value(term);
             let valid = value.is_some();
             attrs.border_color = value;
+            valid
+        }
+        value if value == atoms::hover_background() => {
+            let value = color_value(term);
+            let valid = value.is_some();
+            attrs.hover_background = value;
+            valid
+        }
+        value if value == atoms::hover_color() => {
+            let value = color_value(term);
+            let valid = value.is_some();
+            attrs.hover_color = value;
+            valid
+        }
+        value if value == atoms::hover_border_color() => {
+            let value = color_value(term);
+            let valid = value.is_some();
+            attrs.hover_border_color = value;
             valid
         }
         _ => false,

@@ -62,4 +62,7 @@ pub struct Style {
     pub border_radius: Option<f32>,
     pub border_width: Option<f32>,
     pub border_color: Option<u32>,
+    pub hover_background: Option<u32>,
+    pub hover_color: Option<u32>,
+    pub hover_border_color: Option<u32>,
 }

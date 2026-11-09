@@ -42,6 +42,45 @@ pub(crate) fn attach_accessible_action_target(
     element
 }
 
+/// Colors a container takes on while the pointer is over it.
+#[cfg(feature = "real-gpui")]
+#[derive(Clone, Copy, Default)]
+pub(crate) struct HoverColors {
+    background: Option<u32>,
+    color: Option<u32>,
+    border_color: Option<u32>,
+}
+
+#[cfg(feature = "real-gpui")]
+impl HoverColors {
+    pub(crate) fn from_style(style: &StyleAttrs) -> Self {
+        Self {
+            background: style.hover_background,
+            color: style.hover_color,
+            border_color: style.hover_border_color,
+        }
+    }
+
+    fn is_empty(&self) -> bool {
+        self.background.is_none() && self.color.is_none() && self.border_color.is_none()
+    }
+
+    fn apply(self, mut style: gpui::StyleRefinement) -> gpui::StyleRefinement {
+        use gpui::Styled;
+
+        if let Some(value) = self.background {
+            style = style.bg(gpui::rgba(value));
+        }
+        if let Some(value) = self.color {
+            style = style.text_color(gpui::rgba(value));
+        }
+        if let Some(value) = self.border_color {
+            style = style.border_color(gpui::rgba(value));
+        }
+        style
+    }
+}
+
 #[cfg(feature = "real-gpui")]
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn apply_click_event(
@@ -53,6 +92,7 @@ pub(crate) fn apply_click_event(
     window_id: u64,
     motion: super::ContainerMotion,
     window_control: Option<String>,
+    hover: HoverColors,
 ) -> gpui::AnyElement {
     use gpui::{AccessibleAction, InteractiveElement, StatefulInteractiveElement};
 
@@ -63,6 +103,11 @@ pub(crate) fn apply_click_event(
         element_id
     };
     let element = element.debug_selector(|| debug_selector).id(element_id);
+    let element = if hover.is_empty() {
+        element
+    } else {
+        element.hover(move |style| hover.apply(style))
+    };
     let element = super::apply_window_control(element, window_control, runtime.clone(), window_id);
 
     if let Some(event) = event {
