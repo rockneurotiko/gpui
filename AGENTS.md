@@ -81,3 +81,17 @@ mix ci
   `mix gpui.test.precompiled --host gpui_component`.
 - Publish coordinated Hex packages in dependency order: `gpui`, then
   `gpui_components`, then `gpui_native`.
+
+## Our changes (branch `hover-styles`, remote `origin` = github.com/rockneurotiko/gpui)
+
+This checkout is our fork, consumed by `trip-service-cli/apps/tsg` as git deps on this branch.
+Keep the diff against `upstream/main` small and mergeable. Commands are in `justfile`.
+
+- Added: `hover:bg-*`, `hover:text-*`, `hover:border-*` (schema: `apps/gpui/lib/gpui/schema.ex`;
+  parsing: `apps/gpui/lib/gpui/tailwind.ex`; native: `HoverColors` in
+  `apps/gpui_native/native/src/element/event.rs`).
+- `apps/gpui_native/native` names `gpui_core`/`gpui_components` by git (root `Cargo.toml` patches
+  them back to local paths here) and has its own `Cargo.lock` and `rust-toolchain.toml`, so the
+  package builds from a sparse checkout.
+- After Rust changes: `just gen`, commit, push, `just gpui-lock`, commit, push; then
+  `just gpui-update` in `trip-service-cli/apps/tsg`.
