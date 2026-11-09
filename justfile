@@ -25,20 +25,18 @@ ci:
 rust-check:
     cargo check --features gpui-component-host --manifest-path apps/gpui_native/native/Cargo.toml
 
-# After pushing Rust changes: pin the sibling crates (resolved by git, from this branch) in the
-# standalone lock used by sparse consumers. Commit and push the result, then run
-# `just gpui-update` in trip-service-cli/apps/tsg.
+# After pushing Rust changes: point the standalone lock (used by sparse consumers) at the
+# pushed commit for the sibling crates. Only those two source lines change, so the pinned Zed
+# revision is untouched. Commit and push the result, then run `just gpui-update` in
+# trip-service-cli/apps/tsg.
 gpui-lock:
     #!/usr/bin/env bash
     set -euo pipefail
     git diff --quiet && git diff --cached --quiet || { echo "commit and push first"; exit 1; }
-    rm -rf /tmp/gpui-lock && mkdir /tmp/gpui-lock
-    cp -r apps/gpui_native/native /tmp/gpui-lock/native
-    rm -rf /tmp/gpui-lock/native/target
-    cd /tmp/gpui-lock/native
-    cargo update -p gpui_core -p gpui_components
-    cp Cargo.lock "{{justfile_directory()}}/apps/gpui_native/native/Cargo.lock"
-    echo "Updated apps/gpui_native/native/Cargo.lock; commit and push it."
+    [ "$(git rev-parse HEAD)" = "$(git rev-parse origin/hover-styles)" ] || { echo "push first"; exit 1; }
+    sha=$(git rev-parse HEAD)
+    sed -i -E "s|(rockneurotiko/gpui\?branch=hover-styles#)[0-9a-f]+|\1${sha}|" apps/gpui_native/native/Cargo.lock
+    echo "Pinned crates to ${sha}; commit and push apps/gpui_native/native/Cargo.lock."
 
 # Pull the upstream project's changes into this branch
 sync-upstream:
