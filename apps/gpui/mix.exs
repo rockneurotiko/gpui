@@ -4,7 +4,9 @@ defmodule GPUI.MixProject do
   @version "0.2.0"
   @source_url "https://github.com/elixir-crab/gpui"
   @umbrella_root __DIR__ |> Path.dirname() |> Path.dirname()
-  @in_umbrella File.exists?(Path.join(@umbrella_root, "mix.exs"))
+  # False when the package is fetched as a dependency (parent directory is not `apps`).
+  @in_umbrella Path.basename(Path.dirname(__DIR__)) == "apps" and
+                 File.exists?(Path.join(@umbrella_root, "mix.exs"))
 
   def project do
     [
