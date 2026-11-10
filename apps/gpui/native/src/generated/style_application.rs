@@ -247,6 +247,12 @@ pub fn apply(element: gpui::Div, style: Style) -> gpui::Div {
         }
         _ => {}
     };
+    match style.font_family {
+        Some(value) => {
+            element = element.font_family(gpui::SharedString::from(value));
+        }
+        _ => {}
+    };
     match style.font_weight.as_deref() {
         Some("light") => {
             element = element.font_weight(gpui::FontWeight::LIGHT);

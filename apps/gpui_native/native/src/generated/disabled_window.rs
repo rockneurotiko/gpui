@@ -60,3 +60,11 @@ fn set_theme<'a>(
 ) -> NifResult<Term<'a>> {
     real_gpui_disabled()
 }
+#[rustler::nif(schedule = "DirtyIo")]
+#[allow(unused_variables)]
+fn load_fonts<'a>(
+    _runtime: ResourceArc<RuntimeResource>,
+    _fonts: Vec<Term<'a>>,
+) -> NifResult<Term<'a>> {
+    real_gpui_disabled()
+}

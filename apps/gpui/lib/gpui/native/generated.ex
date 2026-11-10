@@ -70,6 +70,10 @@ defmodule GPUI.Native.Generated do
         :erlang.nif_error(:nif_not_loaded)
       end
 
+      def load_fonts(_runtime, _fonts) do
+        :erlang.nif_error(:nif_not_loaded)
+      end
+
       def put_resource(_runtime, _resource_id, _resource) do
         :erlang.nif_error(:nif_not_loaded)
       end

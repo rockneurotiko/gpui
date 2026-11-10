@@ -34,6 +34,22 @@ defmodule GPUI.TailwindTest do
            ]
   end
 
+  test "normalizes font families" do
+    for {class, family} <- [
+          {"font-sans", "sans-serif"},
+          {"font-serif", "serif"},
+          {"font-mono", "monospace"},
+          {"font-[Fira_Code]", "Fira Code"},
+          {"font-['Fira_Code']", "Fira Code"},
+          {"font-[family-name:Fira_Code]", "Fira Code"}
+        ] do
+      assert %{style: [font_family: ^family], unknown: []} = GPUI.Tailwind.normalize(class)
+    end
+
+    assert %{style: [], unknown: ["font-[Broken"]} = GPUI.Tailwind.normalize("font-[Broken")
+    assert %{style: [], unknown: ["font-[600]"]} = GPUI.Tailwind.normalize("font-[600]")
+  end
+
   test "normalizes a useful Tailwind subset" do
     assert %{
              style: [
@@ -279,7 +295,7 @@ defmodule GPUI.TailwindTest do
   test "preserves unsupported classes exactly" do
     assert %{
              style: [display: :flex],
-             unknown: ["hover:bg-blue-500", "w-[calc(100%-1rem)]", "mx-auto"]
-           } = GPUI.Tailwind.normalize("flex hover:bg-blue-500 w-[calc(100%-1rem)] mx-auto")
+             unknown: ["group-hover:bg-blue-500", "w-[calc(100%-1rem)]", "mx-auto"]
+           } = GPUI.Tailwind.normalize("flex group-hover:bg-blue-500 w-[calc(100%-1rem)] mx-auto")
   end
 end

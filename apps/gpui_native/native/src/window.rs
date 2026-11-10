@@ -474,6 +474,10 @@ pub(crate) enum WindowCommand {
         mode: NativeThemeMode,
         reply: WindowCommandReply,
     },
+    LoadFonts {
+        fonts: Vec<Vec<u8>>,
+        reply: WindowCommandReply,
+    },
     PlatformClosed {
         platform_id: gpui::WindowId,
     },
@@ -665,10 +669,47 @@ fn handle_window_command(
             let result = set_component_theme(mode, windows, cx);
             send_reply(reply, result);
         }
+        WindowCommand::LoadFonts { fonts, reply } => {
+            let result = load_fonts(fonts, cx);
+            send_reply(reply, result);
+        }
         WindowCommand::PlatformClosed { platform_id } => {
             handle_platform_window_closed(windows, platform_id);
         }
     }
+}
+
+/// Registers font data once per distinct content: the text system appends every
+/// call's faces, so repeated loads (for example a restarted display) are skipped.
+fn load_fonts(fonts: Vec<Vec<u8>>, cx: &mut gpui::App) -> Result<(), String> {
+    use std::hash::{Hash, Hasher};
+
+    static LOADED: std::sync::LazyLock<Mutex<std::collections::HashSet<u64>>> =
+        std::sync::LazyLock::new(Default::default);
+    let mut loaded = LOADED
+        .lock()
+        .map_err(|_| "fonts_lock_poisoned".to_string())?;
+    let mut hashes = Vec::new();
+    let fresh: Vec<_> = fonts
+        .into_iter()
+        .filter(|data| {
+            let mut hasher = std::collections::hash_map::DefaultHasher::new();
+            data.hash(&mut hasher);
+            let hash = hasher.finish();
+            let is_new = !loaded.contains(&hash) && !hashes.contains(&hash);
+            if is_new {
+                hashes.push(hash);
+            }
+            is_new
+        })
+        .map(std::borrow::Cow::Owned)
+        .collect();
+    // Hashes are recorded only after a successful load so a failure can be retried.
+    cx.text_system()
+        .add_fonts(fresh)
+        .map_err(|error| error.to_string())?;
+    loaded.extend(hashes);
+    Ok(())
 }
 
 #[cfg(feature = "components")]

@@ -21,6 +21,11 @@ defmodule GPUI.Codegen.Native.Decoder do
     term.atom_to_string().ok()
   end
 
+  @spec string_value(term()) :: R.option(String.t())
+  defrust string_value(term) do
+    decode_as(term, String.t()).ok()
+  end
+
   @spec number_value(term()) :: R.option(R.f32())
   defrust number_value(term) do
     case decode_as(term, R.f64()) do

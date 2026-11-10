@@ -212,6 +212,12 @@ defmodule GPUI.Schema do
       render: {:option_method, :text_size, :px}
     },
     %Style{
+      name: :font_family,
+      field: :font_family,
+      type: :string,
+      render: {:option_method, :font_family, :string}
+    },
+    %Style{
       name: :font_weight,
       field: :font_weight,
       type: :atom_string,

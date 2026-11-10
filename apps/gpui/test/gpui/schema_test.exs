@@ -25,6 +25,7 @@ defmodule GPUI.SchemaTest do
     assert :raster in GPUI.Schema.resources()
     assert :border_radius in GPUI.Schema.styles()
     assert :font_weight in GPUI.Schema.styles()
+    assert :font_family in GPUI.Schema.styles()
   end
 
   test "retains neutral defaults and validation" do

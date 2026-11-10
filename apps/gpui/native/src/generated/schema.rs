@@ -26,6 +26,10 @@ pub(crate) fn atom_string<'a>(term: Term<'a>) -> Option<String> {
     term.atom_to_string().ok()
 }
 #[cfg(feature = "real-gpui")]
+pub(crate) fn string_value<'a>(term: Term<'a>) -> Option<String> {
+    term.decode::<String>().ok()
+}
+#[cfg(feature = "real-gpui")]
 pub(crate) fn number_value<'a>(term: Term<'a>) -> Option<f32> {
     match term.decode::<f64>() {
         Ok(value) => Some(value as f32),
@@ -971,6 +975,7 @@ pub(crate) struct StyleAttrs {
     pub(crate) background: Option<u32>,
     pub(crate) color: Option<u32>,
     pub(crate) font_size: Option<f32>,
+    pub(crate) font_family: Option<String>,
     pub(crate) font_weight: Option<String>,
     pub(crate) line_height: Option<f32>,
     pub(crate) opacity: Option<f32>,
@@ -1183,6 +1188,12 @@ pub(crate) fn apply_generated_style_attr<'a>(
             let value = px_value(term);
             let valid = value.is_some();
             attrs.font_size = value;
+            valid
+        }
+        value if value == atoms::font_family() => {
+            let value = string_value(term);
+            let valid = value.is_some();
+            attrs.font_family = value;
             valid
         }
         value if value == atoms::font_weight() => {
@@ -1615,6 +1626,12 @@ pub(crate) fn apply_generated_render_styles(
     match style.font_size {
         Some(value) => {
             element = element.text_size(gpui::px(value));
+        }
+        _ => {}
+    };
+    match style.font_family {
+        Some(value) => {
+            element = element.font_family(gpui::SharedString::from(value));
         }
         _ => {}
     };

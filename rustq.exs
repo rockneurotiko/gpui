@@ -266,6 +266,7 @@ generate "native-stubs", "apps/gpui/lib/gpui/native/generated.ex" do
           frame_token: MetaAST.function!(GPUI.Codegen.Native.Window, :frame_token),
           await_frame_after: MetaAST.function!(GPUI.Codegen.Native.Window, :await_frame_after),
           set_theme: MetaAST.function!(GPUI.Codegen.Native.Window, :set_theme),
+          load_fonts: MetaAST.function!(GPUI.Codegen.Native.Window, :load_fonts),
           put_resource: MetaAST.function!(GPUI.Codegen.Native.ResourceBoundary, :put_resource),
           drop_resource: MetaAST.function!(GPUI.Codegen.Native.ResourceBoundary, :drop_resource),
           drain_events: MetaAST.function!(GPUI.Codegen.Native.EventBoundary, :drain_events),

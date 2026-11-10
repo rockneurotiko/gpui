@@ -31,6 +31,7 @@ pub(crate) fn style_to_core(wire: StyleAttrs) -> gpui_core::Style {
     style.background = wire.background;
     style.color = wire.color;
     style.font_size = wire.font_size;
+    style.font_family = wire.font_family;
     style.font_weight = wire.font_weight;
     style.line_height = wire.line_height;
     style.opacity = wire.opacity;

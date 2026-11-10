@@ -111,6 +111,15 @@ defmodule GPUI.Tailwind do
     ArgumentError -> :ets.whereis(@cache_table)
   end
 
+  # `font-[600]` is an arbitrary weight, not a family.
+  defp font_family(acc, name, class) do
+    name = name |> String.replace_prefix("family-name:", "") |> String.trim("'")
+
+    if name == "" or String.match?(name, ~r/^\d+$/),
+      do: unknown(acc, class),
+      else: put_style(acc, :font_family, String.replace(name, "_", " "))
+  end
+
   defp normalize_class("relative", acc), do: put_style(acc, :position, :relative)
   defp normalize_class("absolute", acc), do: put_style(acc, :position, :absolute)
   defp normalize_class("flex-1", acc), do: put_style(acc, :flex, :one)
@@ -161,6 +170,17 @@ defmodule GPUI.Tailwind do
   defp normalize_class("cursor-text", acc), do: put_style(acc, :cursor, :text)
   defp normalize_class("cursor-move", acc), do: put_style(acc, :cursor, :move)
   defp normalize_class("cursor-not-allowed", acc), do: put_style(acc, :cursor, :not_allowed)
+  defp normalize_class("font-sans", acc), do: put_style(acc, :font_family, "sans-serif")
+  defp normalize_class("font-serif", acc), do: put_style(acc, :font_family, "serif")
+  defp normalize_class("font-mono", acc), do: put_style(acc, :font_family, "monospace")
+
+  defp normalize_class("font-[" <> rest, acc) do
+    case String.split(rest, "]", parts: 2) do
+      [name, ""] -> font_family(acc, name, "font-[" <> rest)
+      _ -> unknown(acc, "font-[" <> rest)
+    end
+  end
+
   defp normalize_class("font-light", acc), do: put_style(acc, :font_weight, :light)
   defp normalize_class("font-normal", acc), do: put_style(acc, :font_weight, :normal)
   defp normalize_class("font-medium", acc), do: put_style(acc, :font_weight, :medium)

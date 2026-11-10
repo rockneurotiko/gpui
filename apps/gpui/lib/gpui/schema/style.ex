@@ -6,6 +6,7 @@ defmodule GPUI.Schema.Style do
 
   @type value_type ::
           :atom_string
+          | :string
           | :color
           | :number
           | :px
@@ -20,7 +21,7 @@ defmodule GPUI.Schema.Style do
           | {:enum_methods, [{String.t(), atom()}]}
           | {:enum_values, atom(), [{String.t(), [atom()]}]}
           | {:option_method, atom(),
-             :color | :px | :length | :position_length | :flex_basis | :f32}
+             :color | :px | :string | :length | :position_length | :flex_basis | :f32}
           | {:option_methods, [atom()], :position_length}
 
   @type t :: %__MODULE__{

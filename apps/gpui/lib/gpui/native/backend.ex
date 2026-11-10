@@ -94,6 +94,9 @@ defmodule GPUI.Native.Backend do
   @doc "Changes the native component theme."
   def set_theme(runtime, mode), do: call(:set_theme, [runtime, mode])
 
+  @doc "Adds font file contents to a native runtime's text system."
+  def load_fonts(runtime, fonts), do: call(:load_fonts, [runtime, fonts])
+
   @doc "Installs a renderer resource in a native runtime."
   def put_resource(runtime, resource_id, resource),
     do: call(:put_resource, [runtime, resource_id, resource])

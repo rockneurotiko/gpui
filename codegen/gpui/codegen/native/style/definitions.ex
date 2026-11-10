@@ -59,6 +59,7 @@ defmodule GPUI.Codegen.Native.Style.Definitions do
 
   defp style_field_type({:atom_eq, _expected}), do: quote(do: boolean())
   defp style_field_type(:atom_string), do: quote(do: R.option(String.t()))
+  defp style_field_type(:string), do: quote(do: R.option(String.t()))
   defp style_field_type(:color), do: quote(do: R.option(R.u32()))
 
   defp style_field_type(type) when type in [:number, :px, :radius],
@@ -99,6 +100,7 @@ defmodule GPUI.Codegen.Native.Style.Definitions do
     do: quote(do: atom_eq(term, unquote(to_string(expected))))
 
   defp style_decode_call(:atom_string), do: quote(do: atom_string(term))
+  defp style_decode_call(:string), do: quote(do: string_value(term))
   defp style_decode_call(:color), do: quote(do: color_value(term))
   defp style_decode_call(:number), do: quote(do: number_value(term))
   defp style_decode_call(:px), do: quote(do: px_value(term))
@@ -141,7 +143,7 @@ defmodule GPUI.Codegen.Native.Style.Definitions do
   end
 
   defp render_statement(%{field: field, render: {:option_method, method, unit}})
-       when unit in [:color, :px, :length, :position_length, :flex_basis, :f32] do
+       when unit in [:color, :string, :px, :length, :position_length, :flex_basis, :f32] do
     rendered_value =
       case unit do
         unit when unit in [:f32, :length, :position_length, :flex_basis] ->
@@ -150,6 +152,11 @@ defmodule GPUI.Codegen.Native.Style.Definitions do
         :color ->
           quote do
             GPUI.rgba(value)
+          end
+
+        :string ->
+          quote do
+            GPUI.SharedString.from(value)
           end
 
         unit ->

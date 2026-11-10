@@ -35,6 +35,7 @@ pub struct Style {
     pub background: Option<u32>,
     pub color: Option<u32>,
     pub font_size: Option<f32>,
+    pub font_family: Option<String>,
     pub font_weight: Option<String>,
     pub line_height: Option<f32>,
     pub opacity: Option<f32>,
