@@ -137,7 +137,7 @@ defmodule GPUI.UI.DataViewsTest do
                id: "code",
                label: "Code",
                text: "run mix",
-               runs: [run.(Position.new(0, 4), Position.new(0, 7), font_family: "monospace")]
+               runs: [run.(Position.new(0, 4), Position.new(0, 7), font_family: "Example Mono")]
              })
 
     for family <- ["", :mono, String.duplicate("a", 2_049)] do

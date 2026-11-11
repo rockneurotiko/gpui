@@ -43,7 +43,8 @@ runs = [
 Run positions use zero-based `{line, utf16_offset}` coordinates and are
 converted to native UTF-8 shaping ranges without splitting surrogate pairs.
 Runs can set foreground/background color, font weight/style/family (for example
-`font_family: "monospace"` for inline code; size is inherited), solid or wavy
+`font_family` set to the name of a system-installed or `fonts:`-loaded family;
+size is inherited), solid or wavy
 underline, strikethrough, and an opaque bounded link value. Unstyled gaps
 inherit ordinary component text styles.
 

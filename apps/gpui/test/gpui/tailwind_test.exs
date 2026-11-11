@@ -55,9 +55,6 @@ defmodule GPUI.TailwindTest do
 
   test "normalizes font families" do
     for {class, family} <- [
-          {"font-sans", "sans-serif"},
-          {"font-serif", "serif"},
-          {"font-mono", "monospace"},
           {"font-[Fira_Code]", "Fira Code"},
           {"font-['Fira_Code']", "Fira Code"},
           {"font-[family-name:Fira_Code]", "Fira Code"}

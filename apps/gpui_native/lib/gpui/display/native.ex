@@ -10,7 +10,9 @@ defmodule GPUI.Display.Native do
     * `:theme` - initial component theme, `:light` or `:dark`.
     * `:fonts` - font files (`.ttf`, `.otf`, `.ttc`) or directories of them,
       added to the text system at start so bundled families resolve without
-      being installed. Select them with the `font_family` style. The text
+      being installed. Select them with the `font_family` style. Family names must match an
+      installed or `fonts:`-loaded family exactly; there is no generic-family
+      resolution (`"monospace"`, `"serif"`, ...). The text
       system is process-global; fonts with identical contents are added once.
   """
 

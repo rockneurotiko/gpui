@@ -315,9 +315,6 @@ defmodule GPUI.Tailwind do
   defp normalize_class("cursor-text", acc), do: put_style(acc, :cursor, :text)
   defp normalize_class("cursor-move", acc), do: put_style(acc, :cursor, :move)
   defp normalize_class("cursor-not-allowed", acc), do: put_style(acc, :cursor, :not_allowed)
-  defp normalize_class("font-sans", acc), do: put_style(acc, :font_family, "sans-serif")
-  defp normalize_class("font-serif", acc), do: put_style(acc, :font_family, "serif")
-  defp normalize_class("font-mono", acc), do: put_style(acc, :font_family, "monospace")
 
   defp normalize_class("font-[" <> rest, acc) do
     case String.split(rest, "]", parts: 2) do
