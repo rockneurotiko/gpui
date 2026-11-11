@@ -169,8 +169,11 @@ layout explicitly with classes. `<span>` is likewise a neutral container.
 
 Use the semantic `<scroll>` element for scrolling. An overflow utility is not
 accepted as a substitute because GPUI scrolling requires native scroll state and
-behavior. Unsupported variants and CSS expressions, such as `hover:*`,
-`mx-auto`, or `w-[calc(...)]`, follow `GPUI.Tailwind`'s configured unknown-class
+behavior. `hover:`, `focus:` and `focus-within:` accept `bg-*`, `text-*` and
+`border-*` colours. Focus variants only take effect on elements that own a focus
+handle, such as buttons and other focusable controls; a plain `<div>` is
+not focusable. Other variants and CSS expressions, such as
+`group-hover:*`, `mx-auto`, or `w-[calc(...)]`, follow `GPUI.Tailwind`'s configured unknown-class
 policy instead of being silently reinterpreted. Programmatic trees explicitly
 import helpers such as `GPUI.Builder.style/3`, `GPUI.Builder.px/1`, and
 `GPUI.Builder.rgb/1`.

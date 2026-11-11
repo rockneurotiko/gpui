@@ -1109,6 +1109,12 @@ pub(crate) struct StyleAttrs {
     pub(crate) hover_background: Option<u32>,
     pub(crate) hover_color: Option<u32>,
     pub(crate) hover_border_color: Option<u32>,
+    pub(crate) focus_background: Option<u32>,
+    pub(crate) focus_color: Option<u32>,
+    pub(crate) focus_border_color: Option<u32>,
+    pub(crate) focus_within_background: Option<u32>,
+    pub(crate) focus_within_color: Option<u32>,
+    pub(crate) focus_within_border_color: Option<u32>,
 }
 #[cfg(feature = "real-gpui")]
 pub(crate) fn full_length() -> gpui::DefiniteLength {
@@ -1537,6 +1543,42 @@ pub(crate) fn apply_generated_style_attr<'a>(
             let value = color_value(term);
             let valid = value.is_some();
             attrs.hover_border_color = value;
+            valid
+        }
+        value if value == atoms::focus_background() => {
+            let value = color_value(term);
+            let valid = value.is_some();
+            attrs.focus_background = value;
+            valid
+        }
+        value if value == atoms::focus_color() => {
+            let value = color_value(term);
+            let valid = value.is_some();
+            attrs.focus_color = value;
+            valid
+        }
+        value if value == atoms::focus_border_color() => {
+            let value = color_value(term);
+            let valid = value.is_some();
+            attrs.focus_border_color = value;
+            valid
+        }
+        value if value == atoms::focus_within_background() => {
+            let value = color_value(term);
+            let valid = value.is_some();
+            attrs.focus_within_background = value;
+            valid
+        }
+        value if value == atoms::focus_within_color() => {
+            let value = color_value(term);
+            let valid = value.is_some();
+            attrs.focus_within_color = value;
+            valid
+        }
+        value if value == atoms::focus_within_border_color() => {
+            let value = color_value(term);
+            let valid = value.is_some();
+            attrs.focus_within_border_color = value;
             valid
         }
         _ => false,

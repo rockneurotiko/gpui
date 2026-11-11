@@ -350,11 +350,32 @@ defmodule GPUI.TailwindTest do
     assert %{unknown: ["border-t-3"]} = GPUI.Tailwind.normalize("border-t-3")
   end
 
+  test "normalizes focus and focus-within colours" do
+    assert %{
+             style: [
+               focus_background: {:rgb, 0x3B82F6},
+               focus_color: {:rgb, 0xFFFFFF},
+               focus_border_color: {:rgb, 0xEF4444},
+               focus_within_background: {:rgb, 0x0F172A},
+               focus_within_color: {:rgb, 0xFFFFFF},
+               focus_within_border_color: {:rgb, 0xEF4444}
+             ],
+             unknown: []
+           } =
+             GPUI.Tailwind.normalize(
+               "focus:bg-blue-500 focus:text-white focus:border-red-500 " <>
+                 "focus-within:bg-slate-900 focus-within:text-white focus-within:border-red-500"
+             )
+
+    assert %{unknown: ["focus:bg-nope"]} = GPUI.Tailwind.normalize("focus:bg-nope")
+  end
+
   test "every normalized style is supported by the native schema" do
     classes =
       "flex block grid hidden flex-col-reverse flex-wrap grow shrink-0 items-baseline " <>
         "justify-evenly font-bold leading-normal opacity-50 p-2 px-3 mt-1 w-full h-full " <>
-        "min-w-6 max-h-8 border border-blue-500 rounded-lg bg-slate-900 text-white"
+        "min-w-6 max-h-8 border border-blue-500 rounded-lg bg-slate-900 text-white " <>
+        "hover:bg-blue-500 focus:bg-blue-500 focus-within:text-white"
 
     assert %{style: styles} = GPUI.Tailwind.normalize(classes)
     assert Enum.all?(Keyword.keys(styles), &(&1 in GPUI.Schema.styles()))

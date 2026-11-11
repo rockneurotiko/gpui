@@ -7,7 +7,7 @@ pub(crate) mod component_registry;
 pub(crate) mod controlled;
 pub(crate) mod event;
 
-use event::{apply_click_event, apply_input_events, HoverColors};
+use event::{apply_click_event, apply_input_events, StateColors};
 
 #[cfg(feature = "real-gpui")]
 pub(crate) struct ElementRenderContext<'a, 'cx> {
@@ -861,7 +861,9 @@ pub(crate) fn render_container_primitive(
     } = node;
     let runtime = context.runtime.clone();
     let window_id = context.window_id;
-    let hover = HoverColors::from_style(&style);
+    let hover = StateColors::from_style(&style);
+    let focus_colors = StateColors::from_focus(&style);
+    let focus_within = StateColors::from_focus_within(&style);
     let mut element = apply_generated_render_styles(div(), style);
     element = apply_container_semantics(element, tag);
 
@@ -981,6 +983,8 @@ pub(crate) fn render_container_primitive(
             element_motion,
             window_control,
             hover,
+            focus_colors,
+            focus_within,
         )
     }
 }

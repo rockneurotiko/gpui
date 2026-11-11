@@ -422,6 +422,24 @@ defmodule GPUI.Tailwind do
   defp normalize_class("hover:border-" <> color, acc),
     do: color(acc, :hover_border_color, color, "hover:border-")
 
+  defp normalize_class("focus-within:bg-" <> color, acc),
+    do: color(acc, :focus_within_background, color, "focus-within:bg-")
+
+  defp normalize_class("focus-within:text-" <> color, acc),
+    do: color(acc, :focus_within_color, color, "focus-within:text-")
+
+  defp normalize_class("focus-within:border-" <> color, acc),
+    do: color(acc, :focus_within_border_color, color, "focus-within:border-")
+
+  defp normalize_class("focus:bg-" <> color, acc),
+    do: color(acc, :focus_background, color, "focus:bg-")
+
+  defp normalize_class("focus:text-" <> color, acc),
+    do: color(acc, :focus_color, color, "focus:text-")
+
+  defp normalize_class("focus:border-" <> color, acc),
+    do: color(acc, :focus_border_color, color, "focus:border-")
+
   defp normalize_class("shadow", acc), do: shadow(acc, "", "shadow")
 
   defp normalize_class("shadow-[" <> rest, acc),

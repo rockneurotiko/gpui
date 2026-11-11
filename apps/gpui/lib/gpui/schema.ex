@@ -395,7 +395,15 @@ defmodule GPUI.Schema do
     # them through its hover state.
     %Style{name: :hover_background, field: :hover_background, type: :color},
     %Style{name: :hover_color, field: :hover_color, type: :color},
-    %Style{name: :hover_border_color, field: :hover_border_color, type: :color}
+    %Style{name: :hover_border_color, field: :hover_border_color, type: :color},
+    # Focus colors follow the same rule, and only take effect on elements that own a focus
+    # handle (buttons and other focusable controls).
+    %Style{name: :focus_background, field: :focus_background, type: :color},
+    %Style{name: :focus_color, field: :focus_color, type: :color},
+    %Style{name: :focus_border_color, field: :focus_border_color, type: :color},
+    %Style{name: :focus_within_background, field: :focus_within_background, type: :color},
+    %Style{name: :focus_within_color, field: :focus_within_color, type: :color},
+    %Style{name: :focus_within_border_color, field: :focus_within_border_color, type: :color}
   ]
 
   @resources [

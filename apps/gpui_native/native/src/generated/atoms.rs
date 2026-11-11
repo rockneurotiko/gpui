@@ -32,7 +32,11 @@ mod atoms {
         file_prompt = "file_prompt", file_read = "file_read", first = "first", fit =
         "fit", flex = "flex", flex_basis = "flex_basis", flex_direction =
         "flex_direction", flex_grow = "flex_grow", flex_shrink = "flex_shrink", flex_wrap
-        = "flex_wrap", focus = "focus", focus_request = "focus_request", follow =
+        = "flex_wrap", focus = "focus", focus_background = "focus_background",
+        focus_border_color = "focus_border_color", focus_color = "focus_color",
+        focus_request = "focus_request", focus_within_background =
+        "focus_within_background", focus_within_border_color =
+        "focus_within_border_color", focus_within_color = "focus_within_color", follow =
         "follow", follow_request = "follow_request", font_family = "font_family",
         font_size = "font_size", font_style = "font_style", font_weight = "font_weight",
         format = "format", gap = "gap", geometry = "geometry", geometry_ranges =

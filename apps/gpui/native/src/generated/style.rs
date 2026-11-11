@@ -77,4 +77,10 @@ pub struct Style {
     pub hover_background: Option<u32>,
     pub hover_color: Option<u32>,
     pub hover_border_color: Option<u32>,
+    pub focus_background: Option<u32>,
+    pub focus_color: Option<u32>,
+    pub focus_border_color: Option<u32>,
+    pub focus_within_background: Option<u32>,
+    pub focus_within_color: Option<u32>,
+    pub focus_within_border_color: Option<u32>,
 }

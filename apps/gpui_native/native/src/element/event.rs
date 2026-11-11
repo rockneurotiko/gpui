@@ -42,22 +42,38 @@ pub(crate) fn attach_accessible_action_target(
     element
 }
 
-/// Colors a container takes on while the pointer is over it.
+/// Colors a container takes on while it is hovered, focused, or contains focus.
 #[cfg(feature = "real-gpui")]
 #[derive(Clone, Copy, Default)]
-pub(crate) struct HoverColors {
+pub(crate) struct StateColors {
     background: Option<u32>,
     color: Option<u32>,
     border_color: Option<u32>,
 }
 
 #[cfg(feature = "real-gpui")]
-impl HoverColors {
+impl StateColors {
     pub(crate) fn from_style(style: &StyleAttrs) -> Self {
         Self {
             background: style.hover_background,
             color: style.hover_color,
             border_color: style.hover_border_color,
+        }
+    }
+
+    pub(crate) fn from_focus(style: &StyleAttrs) -> Self {
+        Self {
+            background: style.focus_background,
+            color: style.focus_color,
+            border_color: style.focus_border_color,
+        }
+    }
+
+    pub(crate) fn from_focus_within(style: &StyleAttrs) -> Self {
+        Self {
+            background: style.focus_within_background,
+            color: style.focus_within_color,
+            border_color: style.focus_within_border_color,
         }
     }
 
@@ -92,7 +108,9 @@ pub(crate) fn apply_click_event(
     window_id: u64,
     motion: super::ContainerMotion,
     window_control: Option<String>,
-    hover: HoverColors,
+    hover: StateColors,
+    focus: StateColors,
+    focus_within: StateColors,
 ) -> gpui::AnyElement {
     use gpui::{AccessibleAction, InteractiveElement, StatefulInteractiveElement};
 
@@ -107,6 +125,17 @@ pub(crate) fn apply_click_event(
         element
     } else {
         element.hover(move |style| hover.apply(style))
+    };
+    // Focus styles only apply once the element tracks a focus handle.
+    let element = if focus.is_empty() {
+        element
+    } else {
+        element.focus(move |style| focus.apply(style))
+    };
+    let element = if focus_within.is_empty() {
+        element
+    } else {
+        element.in_focus(move |style| focus_within.apply(style))
     };
     let element = super::apply_window_control(element, window_control, runtime.clone(), window_id);
 
