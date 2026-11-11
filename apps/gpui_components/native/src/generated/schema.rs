@@ -643,6 +643,7 @@ pub(crate) struct RichTextRunNode {
     pub(crate) background: Option<u32>,
     pub(crate) font_weight: Option<String>,
     pub(crate) font_style: Option<String>,
+    pub(crate) font_family: Option<String>,
     pub(crate) underline: Option<u32>,
     pub(crate) underline_style: Option<String>,
     pub(crate) strikethrough: Option<u32>,

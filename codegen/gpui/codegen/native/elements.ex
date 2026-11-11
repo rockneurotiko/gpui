@@ -94,6 +94,7 @@ defmodule GPUI.Codegen.Native.Elements do
           required(:background) => R.option(R.u32()),
           required(:font_weight) => R.option(String.t()),
           required(:font_style) => R.option(String.t()),
+          required(:font_family) => R.option(String.t()),
           required(:underline) => R.option(R.u32()),
           required(:underline_style) => R.option(String.t()),
           required(:strikethrough) => R.option(R.u32()),

@@ -132,6 +132,20 @@ defmodule GPUI.UI.DataViewsTest do
                runs: [run.(Position.new(0, 1), Position.new(0, 3), color: 0xFFFFFF)]
              })
 
+    assert %Element{} =
+             UI.rich_text(%{
+               id: "code",
+               label: "Code",
+               text: "run mix",
+               runs: [run.(Position.new(0, 4), Position.new(0, 7), font_family: "monospace")]
+             })
+
+    for family <- ["", :mono, String.duplicate("a", 2_049)] do
+      assert_raise ArgumentError, ~r/font_family/, fn ->
+        run.(Position.new(0, 0), Position.new(0, 1), font_family: family)
+      end
+    end
+
     assert_raise ArgumentError, ~r/within text UTF-16 bounds/, fn ->
       UI.rich_text(%{
         id: "unicode",
