@@ -1123,6 +1123,10 @@ pub(crate) struct StyleAttrs {
     pub(crate) min_height: Option<gpui::DefiniteLength>,
     pub(crate) max_height: Option<gpui::DefiniteLength>,
     pub(crate) border_radius: Option<f32>,
+    pub(crate) border_top_left_radius: Option<f32>,
+    pub(crate) border_top_right_radius: Option<f32>,
+    pub(crate) border_bottom_left_radius: Option<f32>,
+    pub(crate) border_bottom_right_radius: Option<f32>,
     pub(crate) border_width: Option<f32>,
     pub(crate) border_top_width: Option<f32>,
     pub(crate) border_bottom_width: Option<f32>,
@@ -1513,6 +1517,30 @@ pub(crate) fn apply_generated_style_attr<'a>(
             let value = radius_value(term);
             let valid = value.is_some();
             attrs.border_radius = value;
+            valid
+        }
+        value if value == atoms::border_top_left_radius() => {
+            let value = radius_value(term);
+            let valid = value.is_some();
+            attrs.border_top_left_radius = value;
+            valid
+        }
+        value if value == atoms::border_top_right_radius() => {
+            let value = radius_value(term);
+            let valid = value.is_some();
+            attrs.border_top_right_radius = value;
+            valid
+        }
+        value if value == atoms::border_bottom_left_radius() => {
+            let value = radius_value(term);
+            let valid = value.is_some();
+            attrs.border_bottom_left_radius = value;
+            valid
+        }
+        value if value == atoms::border_bottom_right_radius() => {
+            let value = radius_value(term);
+            let valid = value.is_some();
+            attrs.border_bottom_right_radius = value;
             valid
         }
         value if value == atoms::border_width() => {
@@ -2128,6 +2156,30 @@ pub(crate) fn apply_generated_render_styles(
     match style.border_radius {
         Some(value) => {
             element = element.rounded(gpui::px(value));
+        }
+        _ => {}
+    };
+    match style.border_top_left_radius {
+        Some(value) => {
+            element = element.rounded_tl(gpui::px(value));
+        }
+        _ => {}
+    };
+    match style.border_top_right_radius {
+        Some(value) => {
+            element = element.rounded_tr(gpui::px(value));
+        }
+        _ => {}
+    };
+    match style.border_bottom_left_radius {
+        Some(value) => {
+            element = element.rounded_bl(gpui::px(value));
+        }
+        _ => {}
+    };
+    match style.border_bottom_right_radius {
+        Some(value) => {
+            element = element.rounded_br(gpui::px(value));
         }
         _ => {}
     };

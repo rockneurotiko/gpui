@@ -25,6 +25,16 @@ defmodule GPUI.SchemaTest do
     assert Enum.map(GPUI.Schema.stateful_components(), & &1.kind) == [:text_surface]
     assert :raster in GPUI.Schema.resources()
     assert :border_radius in GPUI.Schema.styles()
+
+    assert Enum.all?(
+             [
+               :border_top_left_radius,
+               :border_top_right_radius,
+               :border_bottom_left_radius,
+               :border_bottom_right_radius
+             ],
+             &(&1 in GPUI.Schema.styles())
+           )
     assert :font_weight in GPUI.Schema.styles()
     assert :font_family in GPUI.Schema.styles()
 

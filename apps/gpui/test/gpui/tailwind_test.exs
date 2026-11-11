@@ -324,6 +324,21 @@ defmodule GPUI.TailwindTest do
            ]
   end
 
+  test "per-corner border radius" do
+    assert %{style: style, unknown: []} =
+             GPUI.Tailwind.normalize("rounded-t-[9px] rounded-br-lg rounded-l")
+
+    assert Enum.sort(style) == [
+             border_bottom_left_radius: {:px, 4.0},
+             border_bottom_right_radius: {:px, 8.0},
+             border_top_left_radius: {:px, 4.0},
+             border_top_right_radius: {:px, 9.0}
+           ]
+
+    assert %{style: [border_radius: :full], unknown: []} = GPUI.Tailwind.normalize("rounded-full")
+    assert %{unknown: ["rounded-x-lg"]} = GPUI.Tailwind.normalize("rounded-x-lg")
+  end
+
   test "per-side border widths and border style" do
     assert %{style: style, unknown: []} =
              GPUI.Tailwind.normalize(

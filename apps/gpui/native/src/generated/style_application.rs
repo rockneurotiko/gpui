@@ -442,6 +442,30 @@ pub fn apply(element: gpui::Div, style: Style) -> gpui::Div {
         }
         _ => {}
     };
+    match style.border_top_left_radius {
+        Some(value) => {
+            element = element.rounded_tl(gpui::px(value));
+        }
+        _ => {}
+    };
+    match style.border_top_right_radius {
+        Some(value) => {
+            element = element.rounded_tr(gpui::px(value));
+        }
+        _ => {}
+    };
+    match style.border_bottom_left_radius {
+        Some(value) => {
+            element = element.rounded_bl(gpui::px(value));
+        }
+        _ => {}
+    };
+    match style.border_bottom_right_radius {
+        Some(value) => {
+            element = element.rounded_br(gpui::px(value));
+        }
+        _ => {}
+    };
     match style.border_width {
         Some(value) => {
             element = element.border(gpui::px(value));

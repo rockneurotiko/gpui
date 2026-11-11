@@ -344,13 +344,15 @@ defmodule GPUI.Tailwind do
   end
 
   defp normalize_class("rounded" <> suffix = class, acc) do
+    {keys, suffix} = rounded_corners(suffix)
+
     radius =
       if suffix == "",
         do: {:ok, {:px, 4.0}},
         else: rounded_radius(String.trim_leading(suffix, "-"))
 
     case radius do
-      {:ok, value} -> put_style(acc, :border_radius, value)
+      {:ok, value} -> Enum.reduce(keys, acc, &put_style(&2, &1, value))
       :error -> unknown(acc, class)
     end
   end
@@ -781,6 +783,33 @@ defmodule GPUI.Tailwind do
       _other -> :error
     end
   end
+
+  @rounded_corners %{
+    "t" => [:border_top_left_radius, :border_top_right_radius],
+    "b" => [:border_bottom_left_radius, :border_bottom_right_radius],
+    "l" => [:border_top_left_radius, :border_bottom_left_radius],
+    "r" => [:border_top_right_radius, :border_bottom_right_radius],
+    "tl" => [:border_top_left_radius],
+    "tr" => [:border_top_right_radius],
+    "bl" => [:border_bottom_left_radius],
+    "br" => [:border_bottom_right_radius]
+  }
+
+  # `rounded-t-lg`, `rounded-bl-[9px]` and `rounded-b` set some corners; `rounded-lg` sets all.
+  defp rounded_corners("-" <> rest = suffix) do
+    {side, value} =
+      case String.split(rest, "-", parts: 2) do
+        [side] -> {side, ""}
+        [side, value] -> {side, "-" <> value}
+      end
+
+    case Map.fetch(@rounded_corners, side) do
+      {:ok, keys} -> {keys, value}
+      :error -> {[:border_radius], suffix}
+    end
+  end
+
+  defp rounded_corners(suffix), do: {[:border_radius], suffix}
 
   defp rounded_radius("[" <> _rest = value) do
     case parse_arbitrary_px(value) do

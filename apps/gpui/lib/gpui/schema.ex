@@ -350,6 +350,30 @@ defmodule GPUI.Schema do
       render: {:option_method, :rounded, :px}
     },
     %Style{
+      name: :border_top_left_radius,
+      field: :border_top_left_radius,
+      type: :radius,
+      render: {:option_method, :rounded_tl, :px}
+    },
+    %Style{
+      name: :border_top_right_radius,
+      field: :border_top_right_radius,
+      type: :radius,
+      render: {:option_method, :rounded_tr, :px}
+    },
+    %Style{
+      name: :border_bottom_left_radius,
+      field: :border_bottom_left_radius,
+      type: :radius,
+      render: {:option_method, :rounded_bl, :px}
+    },
+    %Style{
+      name: :border_bottom_right_radius,
+      field: :border_bottom_right_radius,
+      type: :radius,
+      render: {:option_method, :rounded_br, :px}
+    },
+    %Style{
       name: :border_width,
       field: :border_width,
       type: :px,
