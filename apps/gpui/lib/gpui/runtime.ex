@@ -434,6 +434,10 @@ defmodule GPUI.Runtime do
     end
   end
 
+  # An idle poll drains nothing; skip the session, which would render every window only
+  # for the result to be dropped.
+  defp apply_display_events(state, []), do: {:ok, [], state}
+
   defp apply_display_events(state, events) do
     case GPUI.Session.dispatch_events(state.session, events) do
       {:ok, handled, snapshot} -> synchronize_display_events(state, events, handled, snapshot)
