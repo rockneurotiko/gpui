@@ -111,13 +111,27 @@ defmodule GPUI.Tailwind do
     ArgumentError -> :ets.whereis(@cache_table)
   end
 
-  # `font-[600]` is an arbitrary weight, not a family.
+  @arbitrary_weights %{
+    "100" => :thin,
+    "200" => :extra_light,
+    "300" => :light,
+    "400" => :normal,
+    "500" => :medium,
+    "600" => :semibold,
+    "700" => :bold,
+    "800" => :extra_bold,
+    "900" => :black
+  }
+
+  # `font-[600]` is an arbitrary weight, not a family; other digit-only names are unknown.
   defp font_family(acc, name, class) do
     name = name |> String.replace_prefix("family-name:", "") |> String.trim("'")
 
-    if name == "" or String.match?(name, ~r/^\d+$/),
-      do: unknown(acc, class),
-      else: put_style(acc, :font_family, String.replace(name, "_", " "))
+    cond do
+      weight = @arbitrary_weights[name] -> put_style(acc, :font_weight, weight)
+      name == "" or String.match?(name, ~r/^\d+$/) -> unknown(acc, class)
+      true -> put_style(acc, :font_family, String.replace(name, "_", " "))
+    end
   end
 
   defp normalize_class("relative", acc), do: put_style(acc, :position, :relative)
@@ -181,11 +195,15 @@ defmodule GPUI.Tailwind do
     end
   end
 
+  defp normalize_class("font-thin", acc), do: put_style(acc, :font_weight, :thin)
+  defp normalize_class("font-extralight", acc), do: put_style(acc, :font_weight, :extra_light)
   defp normalize_class("font-light", acc), do: put_style(acc, :font_weight, :light)
   defp normalize_class("font-normal", acc), do: put_style(acc, :font_weight, :normal)
   defp normalize_class("font-medium", acc), do: put_style(acc, :font_weight, :medium)
   defp normalize_class("font-semibold", acc), do: put_style(acc, :font_weight, :semibold)
   defp normalize_class("font-bold", acc), do: put_style(acc, :font_weight, :bold)
+  defp normalize_class("font-extrabold", acc), do: put_style(acc, :font_weight, :extra_bold)
+  defp normalize_class("font-black", acc), do: put_style(acc, :font_weight, :black)
   defp normalize_class("border", acc), do: put_style(acc, :border_width, {:px, 1.0})
   defp normalize_class("border-" <> color, acc), do: color(acc, :border_color, color, "border-")
 

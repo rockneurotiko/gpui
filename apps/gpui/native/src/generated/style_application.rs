@@ -254,6 +254,12 @@ pub fn apply(element: gpui::Div, style: Style) -> gpui::Div {
         _ => {}
     };
     match style.font_weight.as_deref() {
+        Some("thin") => {
+            element = element.font_weight(gpui::FontWeight::THIN);
+        }
+        Some("extra_light") => {
+            element = element.font_weight(gpui::FontWeight::EXTRA_LIGHT);
+        }
         Some("light") => {
             element = element.font_weight(gpui::FontWeight::LIGHT);
         }
@@ -268,6 +274,12 @@ pub fn apply(element: gpui::Div, style: Style) -> gpui::Div {
         }
         Some("bold") => {
             element = element.font_weight(gpui::FontWeight::BOLD);
+        }
+        Some("extra_bold") => {
+            element = element.font_weight(gpui::FontWeight::EXTRA_BOLD);
+        }
+        Some("black") => {
+            element = element.font_weight(gpui::FontWeight::BLACK);
         }
         _ => {}
     };

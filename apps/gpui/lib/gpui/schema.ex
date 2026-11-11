@@ -224,11 +224,15 @@ defmodule GPUI.Schema do
       render:
         {:enum_values, :font_weight,
          [
+           {"thin", [:gpui, :FontWeight, :THIN]},
+           {"extra_light", [:gpui, :FontWeight, :EXTRA_LIGHT]},
            {"light", [:gpui, :FontWeight, :LIGHT]},
            {"normal", [:gpui, :FontWeight, :NORMAL]},
            {"medium", [:gpui, :FontWeight, :MEDIUM]},
            {"semibold", [:gpui, :FontWeight, :SEMIBOLD]},
-           {"bold", [:gpui, :FontWeight, :BOLD]}
+           {"bold", [:gpui, :FontWeight, :BOLD]},
+           {"extra_bold", [:gpui, :FontWeight, :EXTRA_BOLD]},
+           {"black", [:gpui, :FontWeight, :BLACK]}
          ]}
     },
     %Style{

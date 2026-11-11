@@ -1636,6 +1636,12 @@ pub(crate) fn apply_generated_render_styles(
         _ => {}
     };
     match style.font_weight.as_deref() {
+        Some("thin") => {
+            element = element.font_weight(gpui::FontWeight::THIN);
+        }
+        Some("extra_light") => {
+            element = element.font_weight(gpui::FontWeight::EXTRA_LIGHT);
+        }
         Some("light") => {
             element = element.font_weight(gpui::FontWeight::LIGHT);
         }
@@ -1650,6 +1656,12 @@ pub(crate) fn apply_generated_render_styles(
         }
         Some("bold") => {
             element = element.font_weight(gpui::FontWeight::BOLD);
+        }
+        Some("extra_bold") => {
+            element = element.font_weight(gpui::FontWeight::EXTRA_BOLD);
+        }
+        Some("black") => {
+            element = element.font_weight(gpui::FontWeight::BLACK);
         }
         _ => {}
     };

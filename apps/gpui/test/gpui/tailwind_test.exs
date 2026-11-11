@@ -47,7 +47,33 @@ defmodule GPUI.TailwindTest do
     end
 
     assert %{style: [], unknown: ["font-[Broken"]} = GPUI.Tailwind.normalize("font-[Broken")
-    assert %{style: [], unknown: ["font-[600]"]} = GPUI.Tailwind.normalize("font-[600]")
+    assert %{style: [], unknown: ["font-[650]"]} = GPUI.Tailwind.normalize("font-[650]")
+    assert %{style: [], unknown: ["font-[1000]"]} = GPUI.Tailwind.normalize("font-[1000]")
+  end
+
+  test "normalizes the full font weight scale" do
+    for {class, weight} <- [
+          {"font-thin", :thin},
+          {"font-extralight", :extra_light},
+          {"font-light", :light},
+          {"font-normal", :normal},
+          {"font-medium", :medium},
+          {"font-semibold", :semibold},
+          {"font-bold", :bold},
+          {"font-extrabold", :extra_bold},
+          {"font-black", :black},
+          {"font-[100]", :thin},
+          {"font-[200]", :extra_light},
+          {"font-[300]", :light},
+          {"font-[400]", :normal},
+          {"font-[500]", :medium},
+          {"font-[600]", :semibold},
+          {"font-[700]", :bold},
+          {"font-[800]", :extra_bold},
+          {"font-[900]", :black}
+        ] do
+      assert %{style: [font_weight: ^weight], unknown: []} = GPUI.Tailwind.normalize(class)
+    end
   end
 
   test "normalizes a useful Tailwind subset" do
