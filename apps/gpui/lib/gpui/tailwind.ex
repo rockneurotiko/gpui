@@ -410,6 +410,18 @@ defmodule GPUI.Tailwind do
     end
   end
 
+  defp normalize_class("active:bg-" <> color, acc),
+    do: color(acc, :active_background, color, "active:bg-")
+
+  defp normalize_class("active:text-" <> color, acc),
+    do: color(acc, :active_color, color, "active:text-")
+
+  defp normalize_class("active:border-" <> color, acc),
+    do: color(acc, :active_border_color, color, "active:border-")
+
+  defp normalize_class("active:opacity-" <> value, acc),
+    do: opacity(value, acc, :active_opacity, "active:opacity-")
+
   defp normalize_class("hover:bg-" <> color, acc),
     do: color(acc, :hover_background, color, "hover:bg-")
 

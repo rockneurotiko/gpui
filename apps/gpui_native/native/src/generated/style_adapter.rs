@@ -73,6 +73,10 @@ pub(crate) fn style_to_core(wire: StyleAttrs) -> gpui_core::Style {
     style.hover_color = wire.hover_color;
     style.hover_border_color = wire.hover_border_color;
     style.hover_opacity = wire.hover_opacity;
+    style.active_background = wire.active_background;
+    style.active_color = wire.active_color;
+    style.active_border_color = wire.active_border_color;
+    style.active_opacity = wire.active_opacity;
     style.focus_background = wire.focus_background;
     style.focus_color = wire.focus_color;
     style.focus_border_color = wire.focus_border_color;

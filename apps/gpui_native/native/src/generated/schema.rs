@@ -1175,6 +1175,10 @@ pub(crate) struct StyleAttrs {
     pub(crate) hover_color: Option<u32>,
     pub(crate) hover_border_color: Option<u32>,
     pub(crate) hover_opacity: Option<f32>,
+    pub(crate) active_background: Option<u32>,
+    pub(crate) active_color: Option<u32>,
+    pub(crate) active_border_color: Option<u32>,
+    pub(crate) active_opacity: Option<f32>,
     pub(crate) focus_background: Option<u32>,
     pub(crate) focus_color: Option<u32>,
     pub(crate) focus_border_color: Option<u32>,
@@ -1617,6 +1621,30 @@ pub(crate) fn apply_generated_style_attr<'a>(
             let value = number_value(term);
             let valid = value.is_some();
             attrs.hover_opacity = value;
+            valid
+        }
+        value if value == atoms::active_background() => {
+            let value = color_value(term);
+            let valid = value.is_some();
+            attrs.active_background = value;
+            valid
+        }
+        value if value == atoms::active_color() => {
+            let value = color_value(term);
+            let valid = value.is_some();
+            attrs.active_color = value;
+            valid
+        }
+        value if value == atoms::active_border_color() => {
+            let value = color_value(term);
+            let valid = value.is_some();
+            attrs.active_border_color = value;
+            valid
+        }
+        value if value == atoms::active_opacity() => {
+            let value = number_value(term);
+            let valid = value.is_some();
+            attrs.active_opacity = value;
             valid
         }
         value if value == atoms::focus_background() => {

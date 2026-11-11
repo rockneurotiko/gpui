@@ -427,6 +427,7 @@ pub(crate) fn render_svg_primitive(
     use std::hash::{Hash, Hasher};
 
     let hover = StateColors::from_style(&style);
+    let active = StateColors::from_active(&style);
     let focus = StateColors::from_focus(&style);
     let focus_within = StateColors::from_focus_within(&style);
 
@@ -455,6 +456,9 @@ pub(crate) fn render_svg_primitive(
         .id(element_id);
     if !hover.is_empty() {
         element = element.hover(move |style| hover.apply(style));
+    }
+    if !active.is_empty() {
+        element = element.active(move |style| active.apply(style));
     }
     if !focus.is_empty() {
         element = element.focus(move |style| focus.apply(style));
@@ -925,6 +929,7 @@ pub(crate) fn render_container_primitive(
     let runtime = context.runtime.clone();
     let window_id = context.window_id;
     let hover = StateColors::from_style(&style);
+    let active = StateColors::from_active(&style);
     let focus_colors = StateColors::from_focus(&style);
     let focus_within = StateColors::from_focus_within(&style);
     let mut element = apply_generated_render_styles(div(), style);
@@ -1046,6 +1051,7 @@ pub(crate) fn render_container_primitive(
             element_motion,
             window_control,
             hover,
+            active,
             focus_colors,
             focus_within,
         )

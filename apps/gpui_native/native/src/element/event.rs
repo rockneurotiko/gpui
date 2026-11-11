@@ -42,7 +42,7 @@ pub(crate) fn attach_accessible_action_target(
     element
 }
 
-/// Colors a container takes on while it is hovered, focused, or contains focus.
+/// Colors a container takes on while it is hovered, pressed, focused, or contains focus.
 #[cfg(feature = "real-gpui")]
 #[derive(Clone, Copy, Default)]
 pub(crate) struct StateColors {
@@ -60,6 +60,15 @@ impl StateColors {
             color: style.hover_color,
             border_color: style.hover_border_color,
             opacity: style.hover_opacity,
+        }
+    }
+
+    pub(crate) fn from_active(style: &StyleAttrs) -> Self {
+        Self {
+            background: style.active_background,
+            color: style.active_color,
+            border_color: style.active_border_color,
+            opacity: style.active_opacity,
         }
     }
 
@@ -119,6 +128,7 @@ pub(crate) fn apply_click_event(
     motion: super::ContainerMotion,
     window_control: Option<String>,
     hover: StateColors,
+    active: StateColors,
     focus: StateColors,
     focus_within: StateColors,
 ) -> gpui::AnyElement {
@@ -135,6 +145,12 @@ pub(crate) fn apply_click_event(
         element
     } else {
         element.hover(move |style| hover.apply(style))
+    };
+    // Pressed styles need the element id set above.
+    let element = if active.is_empty() {
+        element
+    } else {
+        element.active(move |style| active.apply(style))
     };
     // Focus styles only apply once the element tracks a focus handle.
     let element = if focus.is_empty() {
