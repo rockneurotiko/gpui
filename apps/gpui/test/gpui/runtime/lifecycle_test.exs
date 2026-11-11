@@ -74,6 +74,20 @@ defmodule GPUI.Runtime.LifecycleTest do
     assert Enum.count(messages, &(&1 == :rendered)) <= 2
   end
 
+  test "a message that changes nothing does not render again" do
+    runtime =
+      start_supervised!(
+        {GPUI.Runtime,
+         app: CountingApp, args: [owner: self()], display: GPUI.Test.Display, poll_interval: nil}
+      )
+
+    assert {:ok, _} = GPUI.Runtime.send_view(runtime, 1, :ignored)
+    {:messages, before} = Process.info(self(), :messages)
+    assert {:ok, _} = GPUI.Runtime.send_view(runtime, 1, :ignored)
+    {:messages, later} = Process.info(self(), :messages)
+    assert length(later) == length(before)
+  end
+
   test "exposes stable application identity and runtime topology" do
     runtime =
       start_supervised!(
