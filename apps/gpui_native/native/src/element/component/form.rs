@@ -1,7 +1,10 @@
 #[cfg(not(feature = "components"))]
 use super::render_component_fallback;
 #[cfg(feature = "components")]
-use super::{apply_component_styles, component_input_height, constrain_full_size_component};
+use super::{
+    apply_component_styles, component_input_height, constrain_full_size_component,
+    forward_component_width,
+};
 #[cfg(feature = "components")]
 use crate::element::component_registry::{
     filter_options, ComponentCombobox, ComponentInput, ComponentSelect, NativeComboboxDelegate,
@@ -306,7 +309,8 @@ pub(crate) fn render_input_component(
         accessible_element = accessible_element.aria_placeholder(placeholder);
     }
 
-    accessible_element
+    let accessible_element = forward_component_width(accessible_element, &node.style);
+    crate::element::register_test_target(accessible_element, node.id, None, context)
         .child(apply_component_styles(element, node.style))
         .into_any_element()
 }
@@ -468,7 +472,8 @@ pub(crate) fn render_select_component(
         accessible_element = accessible_element.aria_placeholder(placeholder);
     }
 
-    accessible_element
+    let accessible_element = forward_component_width(accessible_element, &node.style);
+    crate::element::register_test_target(accessible_element, node.id, None, context)
         .child(apply_component_styles(element, node.style))
         .into_any_element()
 }
