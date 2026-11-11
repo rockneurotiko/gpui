@@ -174,7 +174,13 @@ pub(crate) fn apply_click_event(
     } else {
         element.active(move |style| active.apply(style))
     };
-    // Focus styles only apply once the element tracks a focus handle.
+    // Focus styles only apply once the element tracks a focus handle. A container with them
+    // gets one that is not a tab stop, so a wrapper reports the focus of the input inside it.
+    let element = if focus.is_empty() && focus_within.is_empty() {
+        element
+    } else {
+        element.focusable()
+    };
     let element = if focus.is_empty() {
         element
     } else {
