@@ -398,6 +398,24 @@ defmodule GPUI.TailwindTest do
     assert %{unknown: ["active:opacity-101"]} = GPUI.Tailwind.normalize("active:opacity-101")
   end
 
+  test "normalizes focus-visible colours and opacity" do
+    assert %{
+             style: [
+               focus_visible_background: _,
+               focus_visible_color: _,
+               focus_visible_border_color: _,
+               focus_visible_opacity: 0.5
+             ],
+             unknown: []
+           } =
+             GPUI.Tailwind.normalize(
+               "focus-visible:bg-blue-500 focus-visible:text-white focus-visible:border-red-500 focus-visible:opacity-50"
+             )
+
+    assert %{unknown: ["focus-visible:bg-nope"]} =
+             GPUI.Tailwind.normalize("focus-visible:bg-nope")
+  end
+
   test "every normalized style is supported by the native schema" do
     classes =
       "flex block grid hidden flex-col-reverse flex-wrap grow shrink-0 items-baseline " <>
@@ -405,7 +423,9 @@ defmodule GPUI.TailwindTest do
         "min-w-6 max-h-8 border border-blue-500 rounded-lg bg-slate-900 text-white " <>
         "hover:bg-blue-500 focus:bg-blue-500 focus-within:text-white " <>
         "hover:opacity-50 focus:opacity-50 focus-within:opacity-50 " <>
-        "active:bg-blue-500 active:text-white active:border-blue-500 active:opacity-50"
+        "active:bg-blue-500 active:text-white active:border-blue-500 active:opacity-50 " <>
+        "focus-visible:bg-blue-500 focus-visible:text-white focus-visible:border-blue-500 " <>
+        "focus-visible:opacity-50"
 
     assert %{style: styles} = GPUI.Tailwind.normalize(classes)
     assert Enum.all?(Keyword.keys(styles), &(&1 in GPUI.Schema.styles()))

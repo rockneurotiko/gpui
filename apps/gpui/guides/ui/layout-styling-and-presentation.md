@@ -169,7 +169,7 @@ layout explicitly with classes. `<span>` is likewise a neutral container.
 
 Use the semantic `<scroll>` element for scrolling. An overflow utility is not
 accepted as a substitute because GPUI scrolling requires native scroll state and
-behavior. `active:` (pressed) takes the same colours and `opacity-*`. `hover:`, `focus:` and `focus-within:` accept `bg-*`, `text-*` and
+behavior. `active:` (pressed) takes the same colours and `opacity-*`. `hover:`, `focus:`, `focus-within:` and `focus-visible:` (keyboard focus only; replaces the default focus ring) accept `bg-*`, `text-*` and
 `border-*` colours and `opacity-*`. Focus variants only take effect on elements that own a focus
 handle, such as buttons and other focusable controls; a plain `<div>` is
 not focusable. Other variants and CSS expressions, such as

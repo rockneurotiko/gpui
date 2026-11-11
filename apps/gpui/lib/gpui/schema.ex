@@ -412,7 +412,13 @@ defmodule GPUI.Schema do
     %Style{name: :focus_within_background, field: :focus_within_background, type: :color},
     %Style{name: :focus_within_color, field: :focus_within_color, type: :color},
     %Style{name: :focus_within_border_color, field: :focus_within_border_color, type: :color},
-    %Style{name: :focus_within_opacity, field: :focus_within_opacity, type: :number}
+    %Style{name: :focus_within_opacity, field: :focus_within_opacity, type: :number},
+    # Focus-visible (keyboard-only focus) replaces the default focus ring and, like focus, only
+    # takes effect on elements that own a focus handle.
+    %Style{name: :focus_visible_background, field: :focus_visible_background, type: :color},
+    %Style{name: :focus_visible_color, field: :focus_visible_color, type: :color},
+    %Style{name: :focus_visible_border_color, field: :focus_visible_border_color, type: :color},
+    %Style{name: :focus_visible_opacity, field: :focus_visible_opacity, type: :number}
   ]
 
   @resources [

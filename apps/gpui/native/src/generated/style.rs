@@ -90,4 +90,8 @@ pub struct Style {
     pub focus_within_color: Option<u32>,
     pub focus_within_border_color: Option<u32>,
     pub focus_within_opacity: Option<f32>,
+    pub focus_visible_background: Option<u32>,
+    pub focus_visible_color: Option<u32>,
+    pub focus_visible_border_color: Option<u32>,
+    pub focus_visible_opacity: Option<f32>,
 }

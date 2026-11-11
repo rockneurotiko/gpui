@@ -440,6 +440,18 @@ defmodule GPUI.Tailwind do
   defp normalize_class("focus-within:border-" <> color, acc),
     do: color(acc, :focus_within_border_color, color, "focus-within:border-")
 
+  defp normalize_class("focus-visible:bg-" <> color, acc),
+    do: color(acc, :focus_visible_background, color, "focus-visible:bg-")
+
+  defp normalize_class("focus-visible:text-" <> color, acc),
+    do: color(acc, :focus_visible_color, color, "focus-visible:text-")
+
+  defp normalize_class("focus-visible:border-" <> color, acc),
+    do: color(acc, :focus_visible_border_color, color, "focus-visible:border-")
+
+  defp normalize_class("focus-visible:opacity-" <> value, acc),
+    do: opacity(value, acc, :focus_visible_opacity, "focus-visible:opacity-")
+
   defp normalize_class("focus:bg-" <> color, acc),
     do: color(acc, :focus_background, color, "focus:bg-")
 

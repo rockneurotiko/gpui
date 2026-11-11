@@ -932,6 +932,7 @@ pub(crate) fn render_container_primitive(
     let active = StateColors::from_active(&style);
     let focus_colors = StateColors::from_focus(&style);
     let focus_within = StateColors::from_focus_within(&style);
+    let focus_visible = StateColors::from_focus_visible(&style);
     let mut element = apply_generated_render_styles(div(), style);
     element = apply_container_semantics(element, tag);
 
@@ -1054,6 +1055,7 @@ pub(crate) fn render_container_primitive(
             active,
             focus_colors,
             focus_within,
+            focus_visible,
         )
     }
 }

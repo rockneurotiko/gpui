@@ -37,7 +37,10 @@ mod atoms {
         = "flex_wrap", focus = "focus", focus_background = "focus_background",
         focus_border_color = "focus_border_color", focus_color = "focus_color",
         focus_opacity = "focus_opacity", focus_request = "focus_request",
-        focus_within_background = "focus_within_background", focus_within_border_color =
+        focus_visible_background = "focus_visible_background", focus_visible_border_color
+        = "focus_visible_border_color", focus_visible_color = "focus_visible_color",
+        focus_visible_opacity = "focus_visible_opacity", focus_within_background =
+        "focus_within_background", focus_within_border_color =
         "focus_within_border_color", focus_within_color = "focus_within_color",
         focus_within_opacity = "focus_within_opacity", follow = "follow", follow_request
         = "follow_request", font_family = "font_family", font_size = "font_size",

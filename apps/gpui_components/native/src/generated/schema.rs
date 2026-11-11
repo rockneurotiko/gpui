@@ -1187,6 +1187,10 @@ pub(crate) struct StyleAttrs {
     pub(crate) focus_within_color: Option<u32>,
     pub(crate) focus_within_border_color: Option<u32>,
     pub(crate) focus_within_opacity: Option<f32>,
+    pub(crate) focus_visible_background: Option<u32>,
+    pub(crate) focus_visible_color: Option<u32>,
+    pub(crate) focus_visible_border_color: Option<u32>,
+    pub(crate) focus_visible_opacity: Option<f32>,
 }
 #[cfg(feature = "real-gpui")]
 pub(crate) fn full_length() -> gpui::DefiniteLength {
@@ -1693,6 +1697,30 @@ pub(crate) fn apply_generated_style_attr<'a>(
             let value = number_value(term);
             let valid = value.is_some();
             attrs.focus_within_opacity = value;
+            valid
+        }
+        value if value == atoms::focus_visible_background() => {
+            let value = color_value(term);
+            let valid = value.is_some();
+            attrs.focus_visible_background = value;
+            valid
+        }
+        value if value == atoms::focus_visible_color() => {
+            let value = color_value(term);
+            let valid = value.is_some();
+            attrs.focus_visible_color = value;
+            valid
+        }
+        value if value == atoms::focus_visible_border_color() => {
+            let value = color_value(term);
+            let valid = value.is_some();
+            attrs.focus_visible_border_color = value;
+            valid
+        }
+        value if value == atoms::focus_visible_opacity() => {
+            let value = number_value(term);
+            let valid = value.is_some();
+            attrs.focus_visible_opacity = value;
             valid
         }
         _ => false,

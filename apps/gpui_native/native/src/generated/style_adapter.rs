@@ -85,5 +85,9 @@ pub(crate) fn style_to_core(wire: StyleAttrs) -> gpui_core::Style {
     style.focus_within_color = wire.focus_within_color;
     style.focus_within_border_color = wire.focus_within_border_color;
     style.focus_within_opacity = wire.focus_within_opacity;
+    style.focus_visible_background = wire.focus_visible_background;
+    style.focus_visible_color = wire.focus_visible_color;
+    style.focus_visible_border_color = wire.focus_visible_border_color;
+    style.focus_visible_opacity = wire.focus_visible_opacity;
     style
 }

@@ -27,7 +27,7 @@ pub(crate) fn attach_accessible_action_target(
         element = element
             .key_context("GPUIAccessibleControl")
             .tab_index(0)
-            .focus_visible(|style| style.border_2().border_color(gpui::rgb(0x60a5fa)))
+            .focus_visible(move |style| focus_visible_style(StateColors::default(), style))
             .on_key_down(move |key, _window, cx| {
                 if matches!(key.keystroke.key.as_str(), "enter" | "space") {
                     emit_click_event(&keyboard_runtime, window_id, &keyboard_event);
@@ -42,7 +42,7 @@ pub(crate) fn attach_accessible_action_target(
     element
 }
 
-/// Colors a container takes on while it is hovered, pressed, focused, or contains focus.
+/// Colors a container takes on while it is hovered, pressed, focused, keyboard-focused, or contains focus.
 #[cfg(feature = "real-gpui")]
 #[derive(Clone, Copy, Default)]
 pub(crate) struct StateColors {
@@ -90,6 +90,15 @@ impl StateColors {
         }
     }
 
+    pub(crate) fn from_focus_visible(style: &StyleAttrs) -> Self {
+        Self {
+            background: style.focus_visible_background,
+            color: style.focus_visible_color,
+            border_color: style.focus_visible_border_color,
+            opacity: style.focus_visible_opacity,
+        }
+    }
+
     pub(crate) fn is_empty(&self) -> bool {
         self.background.is_none()
             && self.color.is_none()
@@ -116,6 +125,18 @@ impl StateColors {
     }
 }
 
+/// Keyboard-focus styling: the author's colours, or the default ring when none are set.
+#[cfg(feature = "real-gpui")]
+fn focus_visible_style(colors: StateColors, style: gpui::StyleRefinement) -> gpui::StyleRefinement {
+    use gpui::Styled;
+
+    if colors.is_empty() {
+        style.border_2().border_color(gpui::rgb(0x60a5fa))
+    } else {
+        colors.apply(style)
+    }
+}
+
 #[cfg(feature = "real-gpui")]
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn apply_click_event(
@@ -131,6 +152,7 @@ pub(crate) fn apply_click_event(
     active: StateColors,
     focus: StateColors,
     focus_within: StateColors,
+    focus_visible: StateColors,
 ) -> gpui::AnyElement {
     use gpui::{AccessibleAction, InteractiveElement, StatefulInteractiveElement};
 
@@ -179,7 +201,7 @@ pub(crate) fn apply_click_event(
             element
                 .key_context("GPUIAccessibleControl")
                 .tab_index(0)
-                .focus_visible(|style| style.border_2().border_color(gpui::rgb(0x60a5fa)))
+                .focus_visible(move |style| focus_visible_style(focus_visible, style))
                 .on_key_down(move |key, _window, cx| {
                     if matches!(key.keystroke.key.as_str(), "enter" | "space") {
                         emit_click_event(&keyboard_runtime, window_id, &keyboard_event);
