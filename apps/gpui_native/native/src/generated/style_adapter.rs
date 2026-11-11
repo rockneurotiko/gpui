@@ -72,11 +72,14 @@ pub(crate) fn style_to_core(wire: StyleAttrs) -> gpui_core::Style {
     style.hover_background = wire.hover_background;
     style.hover_color = wire.hover_color;
     style.hover_border_color = wire.hover_border_color;
+    style.hover_opacity = wire.hover_opacity;
     style.focus_background = wire.focus_background;
     style.focus_color = wire.focus_color;
     style.focus_border_color = wire.focus_border_color;
+    style.focus_opacity = wire.focus_opacity;
     style.focus_within_background = wire.focus_within_background;
     style.focus_within_color = wire.focus_within_color;
     style.focus_within_border_color = wire.focus_within_border_color;
+    style.focus_within_opacity = wire.focus_within_opacity;
     style
 }

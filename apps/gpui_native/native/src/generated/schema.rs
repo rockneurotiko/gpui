@@ -1174,12 +1174,15 @@ pub(crate) struct StyleAttrs {
     pub(crate) hover_background: Option<u32>,
     pub(crate) hover_color: Option<u32>,
     pub(crate) hover_border_color: Option<u32>,
+    pub(crate) hover_opacity: Option<f32>,
     pub(crate) focus_background: Option<u32>,
     pub(crate) focus_color: Option<u32>,
     pub(crate) focus_border_color: Option<u32>,
+    pub(crate) focus_opacity: Option<f32>,
     pub(crate) focus_within_background: Option<u32>,
     pub(crate) focus_within_color: Option<u32>,
     pub(crate) focus_within_border_color: Option<u32>,
+    pub(crate) focus_within_opacity: Option<f32>,
 }
 #[cfg(feature = "real-gpui")]
 pub(crate) fn full_length() -> gpui::DefiniteLength {
@@ -1610,6 +1613,12 @@ pub(crate) fn apply_generated_style_attr<'a>(
             attrs.hover_border_color = value;
             valid
         }
+        value if value == atoms::hover_opacity() => {
+            let value = number_value(term);
+            let valid = value.is_some();
+            attrs.hover_opacity = value;
+            valid
+        }
         value if value == atoms::focus_background() => {
             let value = color_value(term);
             let valid = value.is_some();
@@ -1628,6 +1637,12 @@ pub(crate) fn apply_generated_style_attr<'a>(
             attrs.focus_border_color = value;
             valid
         }
+        value if value == atoms::focus_opacity() => {
+            let value = number_value(term);
+            let valid = value.is_some();
+            attrs.focus_opacity = value;
+            valid
+        }
         value if value == atoms::focus_within_background() => {
             let value = color_value(term);
             let valid = value.is_some();
@@ -1644,6 +1659,12 @@ pub(crate) fn apply_generated_style_attr<'a>(
             let value = color_value(term);
             let valid = value.is_some();
             attrs.focus_within_border_color = value;
+            valid
+        }
+        value if value == atoms::focus_within_opacity() => {
+            let value = number_value(term);
+            let valid = value.is_some();
+            attrs.focus_within_opacity = value;
             valid
         }
         _ => false,

@@ -49,6 +49,7 @@ pub(crate) struct StateColors {
     background: Option<u32>,
     color: Option<u32>,
     border_color: Option<u32>,
+    opacity: Option<f32>,
 }
 
 #[cfg(feature = "real-gpui")]
@@ -58,6 +59,7 @@ impl StateColors {
             background: style.hover_background,
             color: style.hover_color,
             border_color: style.hover_border_color,
+            opacity: style.hover_opacity,
         }
     }
 
@@ -66,6 +68,7 @@ impl StateColors {
             background: style.focus_background,
             color: style.focus_color,
             border_color: style.focus_border_color,
+            opacity: style.focus_opacity,
         }
     }
 
@@ -74,11 +77,15 @@ impl StateColors {
             background: style.focus_within_background,
             color: style.focus_within_color,
             border_color: style.focus_within_border_color,
+            opacity: style.focus_within_opacity,
         }
     }
 
     pub(crate) fn is_empty(&self) -> bool {
-        self.background.is_none() && self.color.is_none() && self.border_color.is_none()
+        self.background.is_none()
+            && self.color.is_none()
+            && self.border_color.is_none()
+            && self.opacity.is_none()
     }
 
     pub(crate) fn apply(self, mut style: gpui::StyleRefinement) -> gpui::StyleRefinement {
@@ -92,6 +99,9 @@ impl StateColors {
         }
         if let Some(value) = self.border_color {
             style = style.border_color(gpui::rgba(value));
+        }
+        if let Some(value) = self.opacity {
+            style = style.opacity(value);
         }
         style
     }

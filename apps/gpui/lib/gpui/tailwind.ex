@@ -437,6 +437,15 @@ defmodule GPUI.Tailwind do
   defp normalize_class("focus:border-" <> color, acc),
     do: color(acc, :focus_border_color, color, "focus:border-")
 
+  defp normalize_class("hover:opacity-" <> value, acc),
+    do: opacity(value, acc, :hover_opacity, "hover:opacity-")
+
+  defp normalize_class("focus-within:opacity-" <> value, acc),
+    do: opacity(value, acc, :focus_within_opacity, "focus-within:opacity-")
+
+  defp normalize_class("focus:opacity-" <> value, acc),
+    do: opacity(value, acc, :focus_opacity, "focus:opacity-")
+
   defp normalize_class("shadow", acc), do: shadow(acc, "", "shadow")
 
   defp normalize_class("shadow-[" <> rest, acc),
@@ -446,7 +455,7 @@ defmodule GPUI.Tailwind do
   defp normalize_class("bg-" <> color, acc), do: color(acc, :background, color, "bg-")
   defp normalize_class("text-" <> size_or_color, acc), do: text(size_or_color, acc)
   defp normalize_class("leading-" <> value, acc), do: line_height(value, acc)
-  defp normalize_class("opacity-" <> value, acc), do: opacity(value, acc)
+  defp normalize_class("opacity-" <> value, acc), do: opacity(value, acc, :opacity, "opacity-")
   defp normalize_class(class, acc), do: unknown(acc, class)
 
   defp text(value, acc) do
@@ -471,20 +480,20 @@ defmodule GPUI.Tailwind do
     end
   end
 
-  defp opacity("[" <> _rest = value, acc) do
+  defp opacity("[" <> _rest = value, acc, key, prefix) do
     case parse_arbitrary_number(value) do
       {:ok, opacity} when opacity >= 0.0 and opacity <= 1.0 ->
-        put_style(acc, :opacity, opacity)
+        put_style(acc, key, opacity)
 
       _other ->
-        unknown(acc, "opacity-#{value}")
+        unknown(acc, prefix <> value)
     end
   end
 
-  defp opacity(value, acc) do
+  defp opacity(value, acc, key, prefix) do
     case Integer.parse(value) do
-      {opacity, ""} when opacity in 0..100 -> put_style(acc, :opacity, opacity / 100)
-      _other -> unknown(acc, "opacity-#{value}")
+      {opacity, ""} when opacity in 0..100 -> put_style(acc, key, opacity / 100)
+      _other -> unknown(acc, prefix <> value)
     end
   end
 
