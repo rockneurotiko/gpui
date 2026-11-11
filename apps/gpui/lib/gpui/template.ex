@@ -272,13 +272,15 @@ defmodule GPUI.Template do
 
   defp put_style_attr(attrs, []), do: attrs
 
+  # Values such as shadow layers are tuples of more than two elements, which are not literal
+  # quoted expressions, so the style is escaped before it joins the attributes' AST.
   defp put_style_attr(attrs, style) do
     case Keyword.fetch(attrs, :style) do
       :error ->
-        Keyword.put(attrs, :style, style)
+        Keyword.put(attrs, :style, Macro.escape(style))
 
       {:ok, existing} when is_list(existing) ->
-        Keyword.put(attrs, :style, Keyword.merge(existing, style))
+        Keyword.put(attrs, :style, Keyword.merge(existing, Macro.escape(style)))
 
       {:ok, existing} ->
         merged =

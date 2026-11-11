@@ -35,6 +35,7 @@ defmodule GPUI.SchemaTest do
              ],
              &(&1 in GPUI.Schema.styles())
            )
+
     assert :font_weight in GPUI.Schema.styles()
     assert :font_family in GPUI.Schema.styles()
 

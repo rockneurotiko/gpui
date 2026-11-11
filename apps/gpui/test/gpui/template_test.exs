@@ -571,6 +571,17 @@ defmodule GPUI.TemplateTest do
     assert image_attrs[:style] == [width: {:px, 40.0}, height: {:px, 48.0}]
   end
 
+  test "a static shadow class compiles into the style" do
+    assert %GPUI.Element{attrs: attrs} =
+             ~GPUI"""
+             <div class="shadow-[0_1px_2px_#0000001a]"></div>
+             """
+
+    assert attrs[:style][:box_shadow] == [
+             {{:px, 0.0}, {:px, 1.0}, {:px, 2.0}, {:px, 0.0}, {:rgba, 0x1A}, false}
+           ]
+  end
+
   test "svg colour classes become style, leaving source untouched" do
     markup = "<svg/>"
 

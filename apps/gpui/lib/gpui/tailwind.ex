@@ -134,24 +134,30 @@ defmodule GPUI.Tailwind do
     end
   end
 
-  # Tailwind's default box shadows as {x, y, blur, spread, color, inset}.
+  # Tailwind's default box shadows as {x, y, blur, spread, color, inset}, lengths in px.
   @shadows %{
     "none" => [],
-    "2xs" => [{0.0, 1.0, 0.0, 0.0, {:rgba, 13}, false}],
-    "xs" => [{0.0, 1.0, 2.0, 0.0, {:rgba, 13}, false}],
-    "sm" => [{0.0, 1.0, 2.0, 0.0, {:rgba, 13}, false}],
-    "" => [{0.0, 1.0, 3.0, 0.0, {:rgba, 26}, false}, {0.0, 1.0, 2.0, -1.0, {:rgba, 26}, false}],
-    "md" => [{0.0, 4.0, 6.0, -1.0, {:rgba, 26}, false}, {0.0, 2.0, 4.0, -2.0, {:rgba, 26}, false}],
+    "2xs" => [{{:px, 0.0}, {:px, 1.0}, {:px, 0.0}, {:px, 0.0}, {:rgba, 13}, false}],
+    "xs" => [{{:px, 0.0}, {:px, 1.0}, {:px, 2.0}, {:px, 0.0}, {:rgba, 13}, false}],
+    "sm" => [{{:px, 0.0}, {:px, 1.0}, {:px, 2.0}, {:px, 0.0}, {:rgba, 13}, false}],
+    "" => [
+      {{:px, 0.0}, {:px, 1.0}, {:px, 3.0}, {:px, 0.0}, {:rgba, 26}, false},
+      {{:px, 0.0}, {:px, 1.0}, {:px, 2.0}, {:px, -1.0}, {:rgba, 26}, false}
+    ],
+    "md" => [
+      {{:px, 0.0}, {:px, 4.0}, {:px, 6.0}, {:px, -1.0}, {:rgba, 26}, false},
+      {{:px, 0.0}, {:px, 2.0}, {:px, 4.0}, {:px, -2.0}, {:rgba, 26}, false}
+    ],
     "lg" => [
-      {0.0, 10.0, 15.0, -3.0, {:rgba, 26}, false},
-      {0.0, 4.0, 6.0, -4.0, {:rgba, 26}, false}
+      {{:px, 0.0}, {:px, 10.0}, {:px, 15.0}, {:px, -3.0}, {:rgba, 26}, false},
+      {{:px, 0.0}, {:px, 4.0}, {:px, 6.0}, {:px, -4.0}, {:rgba, 26}, false}
     ],
     "xl" => [
-      {0.0, 20.0, 25.0, -5.0, {:rgba, 26}, false},
-      {0.0, 8.0, 10.0, -6.0, {:rgba, 26}, false}
+      {{:px, 0.0}, {:px, 20.0}, {:px, 25.0}, {:px, -5.0}, {:rgba, 26}, false},
+      {{:px, 0.0}, {:px, 8.0}, {:px, 10.0}, {:px, -6.0}, {:rgba, 26}, false}
     ],
-    "2xl" => [{0.0, 25.0, 50.0, -12.0, {:rgba, 64}, false}],
-    "inner" => [{0.0, 2.0, 4.0, 0.0, {:rgba, 13}, true}]
+    "2xl" => [{{:px, 0.0}, {:px, 25.0}, {:px, 50.0}, {:px, -12.0}, {:rgba, 64}, false}],
+    "inner" => [{{:px, 0.0}, {:px, 2.0}, {:px, 4.0}, {:px, 0.0}, {:rgba, 13}, true}]
   }
 
   defp shadow(acc, name, class) do
@@ -194,7 +200,7 @@ defmodule GPUI.Tailwind do
          [blur, spread] <- Enum.take(rest ++ [0.0, 0.0], 2),
          true <- blur >= 0.0,
          {:ok, color} <- shadow_color(color) do
-      {:ok, {x, y, blur, spread, color, inset}}
+      {:ok, {{:px, x}, {:px, y}, {:px, blur}, {:px, spread}, color, inset}}
     else
       _invalid -> :error
     end
