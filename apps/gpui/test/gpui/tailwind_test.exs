@@ -327,6 +327,29 @@ defmodule GPUI.TailwindTest do
            ]
   end
 
+  test "per-side border widths and border style" do
+    assert %{style: style, unknown: []} =
+             GPUI.Tailwind.normalize(
+               "border-b border-t-2 border-l-[1.5px] border-x-4 border-dashed"
+             )
+
+    assert style == [
+             border_bottom_width: {:px, 1.0},
+             border_top_width: {:px, 2.0},
+             border_left_width: {:px, 4.0},
+             border_right_width: {:px, 4.0},
+             border_style: :dashed
+           ]
+
+    assert %{style: [border_style: :solid, border_color: {:rgb, 0xEF4444}], unknown: []} =
+             GPUI.Tailwind.normalize("border-solid border-red-500")
+
+    assert %{style: [border_color: _], unknown: []} =
+             GPUI.Tailwind.normalize("border-transparent")
+
+    assert %{unknown: ["border-t-3"]} = GPUI.Tailwind.normalize("border-t-3")
+  end
+
   test "every normalized style is supported by the native schema" do
     classes =
       "flex block grid hidden flex-col-reverse flex-wrap grow shrink-0 items-baseline " <>

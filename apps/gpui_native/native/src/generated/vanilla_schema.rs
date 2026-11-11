@@ -1099,6 +1099,11 @@ pub(crate) struct StyleAttrs {
     pub(crate) max_height: Option<gpui::DefiniteLength>,
     pub(crate) border_radius: Option<f32>,
     pub(crate) border_width: Option<f32>,
+    pub(crate) border_top_width: Option<f32>,
+    pub(crate) border_bottom_width: Option<f32>,
+    pub(crate) border_left_width: Option<f32>,
+    pub(crate) border_right_width: Option<f32>,
+    pub(crate) border_style: Option<String>,
     pub(crate) border_color: Option<u32>,
     pub(crate) box_shadow: Option<Vec<gpui_core::BoxShadowLayer>>,
     pub(crate) hover_background: Option<u32>,
@@ -1472,6 +1477,36 @@ pub(crate) fn apply_generated_style_attr<'a>(
             let value = px_value(term);
             let valid = value.is_some();
             attrs.border_width = value;
+            valid
+        }
+        value if value == atoms::border_top_width() => {
+            let value = px_value(term);
+            let valid = value.is_some();
+            attrs.border_top_width = value;
+            valid
+        }
+        value if value == atoms::border_bottom_width() => {
+            let value = px_value(term);
+            let valid = value.is_some();
+            attrs.border_bottom_width = value;
+            valid
+        }
+        value if value == atoms::border_left_width() => {
+            let value = px_value(term);
+            let valid = value.is_some();
+            attrs.border_left_width = value;
+            valid
+        }
+        value if value == atoms::border_right_width() => {
+            let value = px_value(term);
+            let valid = value.is_some();
+            attrs.border_right_width = value;
+            valid
+        }
+        value if value == atoms::border_style() => {
+            let value = atom_string(term);
+            let valid = value.is_some();
+            attrs.border_style = value;
             valid
         }
         value if value == atoms::border_color() => {
@@ -1955,6 +1990,36 @@ pub(crate) fn apply_generated_render_styles(
     match style.border_width {
         Some(value) => {
             element = element.border(gpui::px(value));
+        }
+        _ => {}
+    };
+    match style.border_top_width {
+        Some(value) => {
+            element = element.border_t(gpui::px(value));
+        }
+        _ => {}
+    };
+    match style.border_bottom_width {
+        Some(value) => {
+            element = element.border_b(gpui::px(value));
+        }
+        _ => {}
+    };
+    match style.border_left_width {
+        Some(value) => {
+            element = element.border_l(gpui::px(value));
+        }
+        _ => {}
+    };
+    match style.border_right_width {
+        Some(value) => {
+            element = element.border_r(gpui::px(value));
+        }
+        _ => {}
+    };
+    match style.border_style.as_deref() {
+        Some("dashed") => {
+            element = element.border_dashed();
         }
         _ => {}
     };

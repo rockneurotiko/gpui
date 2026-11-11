@@ -336,7 +336,15 @@ defmodule GPUI.Tailwind do
   defp normalize_class("font-extrabold", acc), do: put_style(acc, :font_weight, :extra_bold)
   defp normalize_class("font-black", acc), do: put_style(acc, :font_weight, :black)
   defp normalize_class("border", acc), do: put_style(acc, :border_width, {:px, 1.0})
-  defp normalize_class("border-" <> color, acc), do: color(acc, :border_color, color, "border-")
+  defp normalize_class("border-solid", acc), do: put_style(acc, :border_style, :solid)
+  defp normalize_class("border-dashed", acc), do: put_style(acc, :border_style, :dashed)
+
+  defp normalize_class("border-" <> rest, acc) do
+    case border_side(rest) do
+      {:ok, keys, width} -> Enum.reduce(keys, acc, &put_style(&2, &1, width))
+      :error -> color(acc, :border_color, rest, "border-")
+    end
+  end
 
   defp normalize_class("rounded" <> suffix = class, acc) do
     radius =
@@ -532,6 +540,34 @@ defmodule GPUI.Tailwind do
   end
 
   defp alpha_channel(percentage), do: round(255 * percentage / 100)
+
+  # `border-t`, `border-x-2` and `border-b-[1.5px]` set per-side widths; anything else is a colour.
+  defp border_side(rest) do
+    {side, width} =
+      case String.split(rest, "-", parts: 2) do
+        [side] -> {side, "1"}
+        [side, width] -> {side, width}
+      end
+
+    sides = %{
+      "t" => [:border_top_width],
+      "b" => [:border_bottom_width],
+      "l" => [:border_left_width],
+      "r" => [:border_right_width],
+      "x" => [:border_left_width, :border_right_width],
+      "y" => [:border_top_width, :border_bottom_width]
+    }
+
+    with {:ok, keys} <- Map.fetch(sides, side),
+         {:ok, px} <- border_width(width) do
+      {:ok, keys, {:px, px}}
+    end
+  end
+
+  defp border_width(width) when width in ["0", "1", "2", "4", "8"],
+    do: {:ok, :erlang.float(String.to_integer(width))}
+
+  defp border_width(width), do: parse_arbitrary_px(width)
 
   defp spacing(acc, key, value) do
     case parse_spacing(value) do

@@ -12,12 +12,15 @@ mod atoms {
         "active", align = "align", align_items = "align_items", alignment = "alignment",
         anchor = "anchor", appearance = "appearance", attrs = "attrs", auto_grow =
         "auto_grow", background = "background", block_projections = "block_projections",
-        blur = "blur", border_color = "border_color", border_radius = "border_radius",
-        border_width = "border_width", bordered = "bordered", bottom = "bottom", bounds =
-        "bounds", box_shadow = "box_shadow", branch = "branch", buffer = "buffer",
-        cancelled = "cancelled", cell_change = "cell_change", change = "change", checked
-        = "checked", children = "children", cleanable = "cleanable", click = "click",
-        clipboard = "clipboard", clipboard_text = "clipboard_text", clipboard_write =
+        blur = "blur", border_bottom_width = "border_bottom_width", border_color =
+        "border_color", border_left_width = "border_left_width", border_radius =
+        "border_radius", border_right_width = "border_right_width", border_style =
+        "border_style", border_top_width = "border_top_width", border_width =
+        "border_width", bordered = "bordered", bottom = "bottom", bounds = "bounds",
+        box_shadow = "box_shadow", branch = "branch", buffer = "buffer", cancelled =
+        "cancelled", cell_change = "cell_change", change = "change", checked = "checked",
+        children = "children", cleanable = "cleanable", click = "click", clipboard =
+        "clipboard", clipboard_text = "clipboard_text", clipboard_write =
         "clipboard_write", closable = "closable", close_button = "close_button",
         collapsed = "collapsed", collapsible = "collapsible", color = "color", command =
         "command", commands = "commands", compact = "compact", content = "content", copy

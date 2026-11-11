@@ -33,6 +33,17 @@ defmodule GPUI.SchemaTest do
            )
 
     assert :box_shadow in GPUI.Schema.styles()
+
+    assert Enum.all?(
+             [
+               :border_top_width,
+               :border_bottom_width,
+               :border_left_width,
+               :border_right_width,
+               :border_style
+             ],
+             &(&1 in GPUI.Schema.styles())
+           )
   end
 
   test "retains neutral defaults and validation" do

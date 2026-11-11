@@ -448,6 +448,36 @@ pub fn apply(element: gpui::Div, style: Style) -> gpui::Div {
         }
         _ => {}
     };
+    match style.border_top_width {
+        Some(value) => {
+            element = element.border_t(gpui::px(value));
+        }
+        _ => {}
+    };
+    match style.border_bottom_width {
+        Some(value) => {
+            element = element.border_b(gpui::px(value));
+        }
+        _ => {}
+    };
+    match style.border_left_width {
+        Some(value) => {
+            element = element.border_l(gpui::px(value));
+        }
+        _ => {}
+    };
+    match style.border_right_width {
+        Some(value) => {
+            element = element.border_r(gpui::px(value));
+        }
+        _ => {}
+    };
+    match style.border_style.as_deref() {
+        Some("dashed") => {
+            element = element.border_dashed();
+        }
+        _ => {}
+    };
     match style.border_color {
         Some(value) => {
             element = element.border_color(gpui::rgba(value));

@@ -355,6 +355,36 @@ defmodule GPUI.Schema do
       render: {:option_method, :border, :px}
     },
     %Style{
+      name: :border_top_width,
+      field: :border_top_width,
+      type: :px,
+      render: {:option_method, :border_t, :px}
+    },
+    %Style{
+      name: :border_bottom_width,
+      field: :border_bottom_width,
+      type: :px,
+      render: {:option_method, :border_b, :px}
+    },
+    %Style{
+      name: :border_left_width,
+      field: :border_left_width,
+      type: :px,
+      render: {:option_method, :border_l, :px}
+    },
+    %Style{
+      name: :border_right_width,
+      field: :border_right_width,
+      type: :px,
+      render: {:option_method, :border_r, :px}
+    },
+    %Style{
+      name: :border_style,
+      field: :border_style,
+      type: :atom_string,
+      render: {:enum_methods, [{"dashed", :border_dashed}]}
+    },
+    %Style{
       name: :border_color,
       field: :border_color,
       type: :color,

@@ -62,6 +62,11 @@ pub(crate) fn style_to_core(wire: StyleAttrs) -> gpui_core::Style {
     style.max_height = wire.max_height.map(gpui_core::style_wire::definite_length);
     style.border_radius = wire.border_radius;
     style.border_width = wire.border_width;
+    style.border_top_width = wire.border_top_width;
+    style.border_bottom_width = wire.border_bottom_width;
+    style.border_left_width = wire.border_left_width;
+    style.border_right_width = wire.border_right_width;
+    style.border_style = wire.border_style;
     style.border_color = wire.border_color;
     style.box_shadow = wire.box_shadow;
     style.hover_background = wire.hover_background;
