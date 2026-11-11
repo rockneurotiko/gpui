@@ -571,6 +571,19 @@ defmodule GPUI.TemplateTest do
     assert image_attrs[:style] == [width: {:px, 40.0}, height: {:px, 48.0}]
   end
 
+  test "svg colour classes become style, leaving source untouched" do
+    markup = "<svg/>"
+
+    assert %GPUI.Element{type: :svg, attrs: attrs} =
+             ~GPUI"""
+             <svg class="w-4 h-4 text-white hover:text-[#38bdf8]" source={markup} />
+             """
+
+    assert attrs[:source] == markup
+    assert attrs[:style][:color] == {:rgb, 0xFFFFFF}
+    assert attrs[:style][:hover_color] == {:rgb, 0x38BDF8}
+  end
+
   test "supports body interpolation" do
     name = "OTP"
 

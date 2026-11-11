@@ -14,6 +14,7 @@ defmodule GPUI.Schema do
   @max_text_surface_lines 64
   @max_block_projections 64
   @max_text_ranges 64
+  @max_svg_bytes 1_048_576
 
   @components GPUI.Schema.Core.components() ++ GPUI.Schema.Surfaces.components()
   @styles [
@@ -684,6 +685,10 @@ defmodule GPUI.Schema do
 
   defp validate_attr!(_tag, _name, :string, value) when is_binary(value), do: :ok
 
+  defp validate_attr!(_tag, _name, :svg_source, value)
+       when is_binary(value) and value != "" and byte_size(value) <= @max_svg_bytes,
+       do: :ok
+
   defp validate_attr!(_tag, _name, :accessibility_label, value)
        when is_binary(value) and value != "" and byte_size(value) <= 512,
        do: :ok
@@ -919,6 +924,9 @@ defmodule GPUI.Schema do
   defp valid_rgba?(color), do: is_integer(color) and color in 0..0xFFFFFFFF
 
   defp expected_attr_type(:string), do: "a string"
+
+  defp expected_attr_type(:svg_source),
+    do: "a non-empty string of at most #{@max_svg_bytes} bytes"
 
   defp expected_attr_type(:accessibility_label),
     do: "a non-empty string of at most 512 bytes"

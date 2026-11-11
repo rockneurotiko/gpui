@@ -8,6 +8,7 @@ pub enum GeneratedComponentKind {
     TextSurface,
     Input,
     Image,
+    Svg,
     Text,
     EdgeFadeComponent,
     FrostComponent,
@@ -593,6 +594,13 @@ pub(crate) struct InputNode {
 }
 #[derive(Clone, Debug)]
 #[cfg(feature = "real-gpui")]
+pub(crate) struct SvgNode {
+    pub(crate) source: String,
+    pub(crate) style: StyleAttrs,
+    pub(crate) label: Option<String>,
+}
+#[derive(Clone, Debug)]
+#[cfg(feature = "real-gpui")]
 pub(crate) struct TextNode {
     pub(crate) text: String,
     pub(crate) style: StyleAttrs,
@@ -865,6 +873,22 @@ pub(crate) fn decode_image_node<'a>(
     Ok(
         ElementNode::Image(ImageNode {
             image,
+            style: decode_style(term)?,
+            label: non_empty_string_attr(term, atoms::label()),
+        }),
+    )
+}
+#[cfg(feature = "real-gpui")]
+#[allow(clippy::redundant_field_names)]
+pub(crate) fn decode_svg_node<'a>(
+    term: Term<'a>,
+    _tag: GeneratedElementTag,
+) -> NifResult<ElementNode> {
+    let attrs = decode_element_attrs(term)?;
+    let source = attrs.map_get(atoms::source())?.decode::<String>()?;
+    Ok(
+        ElementNode::Svg(SvgNode {
+            source,
             style: decode_style(term)?,
             label: non_empty_string_attr(term, atoms::label()),
         }),
@@ -4207,6 +4231,7 @@ pub(crate) enum ElementNode {
     TabsComponent(TabsComponentNode),
     SliderComponent(SliderComponentNode),
     Image(ImageNode),
+    Svg(SvgNode),
     Text(TextNode),
 }
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -4222,6 +4247,7 @@ pub enum GeneratedElementTag {
     TextSurface,
     TextInput,
     Img,
+    Svg,
     Text,
     UiEdgeFade,
     UiFrost,
@@ -4286,6 +4312,7 @@ pub fn decode_generated_element_tag(tag: &str) -> GeneratedElementTag {
         "text_surface" => GeneratedElementTag::TextSurface,
         "text_input" => GeneratedElementTag::TextInput,
         "img" => GeneratedElementTag::Img,
+        "svg" => GeneratedElementTag::Svg,
         "text" => GeneratedElementTag::Text,
         "ui_edge_fade" => GeneratedElementTag::UiEdgeFade,
         "ui_frost" => GeneratedElementTag::UiFrost,
@@ -4351,6 +4378,7 @@ pub fn generated_component_kind(tag: GeneratedElementTag) -> GeneratedComponentK
         GeneratedElementTag::TextSurface => GeneratedComponentKind::TextSurface,
         GeneratedElementTag::TextInput => GeneratedComponentKind::Input,
         GeneratedElementTag::Img => GeneratedComponentKind::Image,
+        GeneratedElementTag::Svg => GeneratedComponentKind::Svg,
         GeneratedElementTag::Text => GeneratedComponentKind::Text,
         GeneratedElementTag::UiEdgeFade => GeneratedComponentKind::EdgeFadeComponent,
         GeneratedElementTag::UiFrost => GeneratedComponentKind::FrostComponent,
@@ -4452,6 +4480,7 @@ pub(crate) fn decode_generated_element_node<'a>(
         GeneratedComponentKind::TextSurface => decode_text_surface_node(term, tag),
         GeneratedComponentKind::Input => decode_input_node(term, tag),
         GeneratedComponentKind::Image => decode_image_node(term, tag),
+        GeneratedComponentKind::Svg => decode_svg_node(term, tag),
         GeneratedComponentKind::Text => decode_text_node(term, tag),
         GeneratedComponentKind::EdgeFadeComponent => {
             decode_generated_edge_fade_component(term)

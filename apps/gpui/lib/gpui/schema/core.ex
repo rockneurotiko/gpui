@@ -506,6 +506,20 @@ defmodule GPUI.Schema.Core do
     },
     %{
       __struct__: GPUI.Schema.Component,
+      attrs: [source: :svg_source, label: :string],
+      children: false,
+      events: [],
+      extension: nil,
+      kind: :svg,
+      public_hidden_attrs: [],
+      public_required_attrs: [],
+      public_slots: [],
+      required_events: [],
+      stateful: false,
+      tag: :svg
+    },
+    %{
+      __struct__: GPUI.Schema.Component,
       attrs: [],
       children: false,
       events: [],

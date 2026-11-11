@@ -77,11 +77,11 @@ impl StateColors {
         }
     }
 
-    fn is_empty(&self) -> bool {
+    pub(crate) fn is_empty(&self) -> bool {
         self.background.is_none() && self.color.is_none() && self.border_color.is_none()
     }
 
-    fn apply(self, mut style: gpui::StyleRefinement) -> gpui::StyleRefinement {
+    pub(crate) fn apply(self, mut style: gpui::StyleRefinement) -> gpui::StyleRefinement {
         use gpui::Styled;
 
         if let Some(value) = self.background {

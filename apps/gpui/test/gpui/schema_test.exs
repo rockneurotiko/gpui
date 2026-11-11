@@ -13,6 +13,7 @@ defmodule GPUI.SchemaTest do
              :text_surface,
              :text_input,
              :img,
+             :svg,
              :text,
              :ui_edge_fade,
              :ui_frost,
@@ -51,6 +52,24 @@ defmodule GPUI.SchemaTest do
 
     assert_raise ArgumentError, ~r/unknown GPUI component/, fn ->
       GPUI.Schema.component!(:unknown)
+    end
+  end
+
+  describe "svg source" do
+    test "accepts non-empty markup up to 1 MiB" do
+      assert %{source: "<svg/>"} =
+               GPUI.Schema.validate_component_assigns!(%{source: "<svg/>"}, :svg)
+
+      limit = String.duplicate("a", 1_048_576)
+      assert %{source: ^limit} = GPUI.Schema.validate_component_assigns!(%{source: limit}, :svg)
+    end
+
+    test "rejects empty, oversize and non-binary sources" do
+      for source <- ["", String.duplicate("a", 1_048_577), :svg, 12] do
+        assert_raise ArgumentError, ~r/svg.*source/, fn ->
+          GPUI.Schema.validate_component_assigns!(%{source: source}, :svg)
+        end
+      end
     end
   end
 end

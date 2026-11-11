@@ -100,18 +100,18 @@ mod atoms {
         "set_size", show_line_numbers = "show_line_numbers", show_whitespaces =
         "show_whitespaces", side = "side", size = "size", sizes = "sizes", soft_wrap =
         "soft_wrap", sort = "sort", sort_column = "sort_column", sort_direction =
-        "sort_direction", sortable = "sortable", stale_revision = "stale_revision",
-        status = "status", step = "step", stride = "stride", style = "style", style_runs
-        = "style_runs", submit = "submit", submit_policy = "submit_policy", tab_size =
-        "tab_size", tab_width = "tab_width", text = "text", text_align = "text_align",
-        text_buffer_lock_failed = "text_buffer_lock_failed", text_overflow =
-        "text_overflow", text_transform = "text_transform", title = "title", toggle =
-        "toggle", top = "top", total_count = "total_count", transaction = "transaction",
-        transaction_conflict = "transaction_conflict", truncate = "truncate", type_atom =
-        "type", underline = "underline", value = "value", vanilla = "vanilla", variant =
-        "variant", viewport = "viewport", white_space = "white_space", width = "width",
-        window_blur = "window_blur", window_close_request = "window_close_request",
-        window_closed = "window_closed", window_control = "window_control", window_focus
-        = "window_focus", window_id = "window_id"
+        "sort_direction", sortable = "sortable", source = "source", stale_revision =
+        "stale_revision", status = "status", step = "step", stride = "stride", style =
+        "style", style_runs = "style_runs", submit = "submit", submit_policy =
+        "submit_policy", tab_size = "tab_size", tab_width = "tab_width", text = "text",
+        text_align = "text_align", text_buffer_lock_failed = "text_buffer_lock_failed",
+        text_overflow = "text_overflow", text_transform = "text_transform", title =
+        "title", toggle = "toggle", top = "top", total_count = "total_count", transaction
+        = "transaction", transaction_conflict = "transaction_conflict", truncate =
+        "truncate", type_atom = "type", underline = "underline", value = "value", vanilla
+        = "vanilla", variant = "variant", viewport = "viewport", white_space =
+        "white_space", width = "width", window_blur = "window_blur", window_close_request
+        = "window_close_request", window_closed = "window_closed", window_control =
+        "window_control", window_focus = "window_focus", window_id = "window_id"
     }
 }

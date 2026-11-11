@@ -72,6 +72,12 @@ impl ElementNode {
                 context.runtime.clone(),
                 context.window_id,
             ),
+            Self::Svg(node) => render_svg_primitive(
+                node.source,
+                node.style,
+                node.label,
+                format!("{}-svg-{element_id}", context.id_namespace),
+            ),
             Self::Input(input) => render_input_primitive(element_id, input, context),
             Self::AnchoredLayer(layer) => render_anchored_layer_primitive(layer, context),
             Self::TextSurface(surface) => {
@@ -399,6 +405,63 @@ pub(crate) fn render_image_primitive(
     let mut element = apply_generated_render_styles(div(), style)
         .child(image)
         .id(element_id);
+    if let Some(label) = label {
+        element = element.role(Role::Image).aria_label(label);
+    }
+    element.into_any_element()
+}
+
+/// Paints inline SVG markup as an alpha mask in the inherited text colour, so `text-*` and the
+/// hover/focus colour states on the wrapper recolour the icon.
+#[cfg(feature = "real-gpui")]
+pub(crate) fn render_svg_primitive(
+    source: String,
+    style: StyleAttrs,
+    label: Option<String>,
+    element_id: String,
+) -> gpui::AnyElement {
+    use gpui::{
+        canvas, div, Hsla, InteractiveElement, IntoElement, ParentElement, Role,
+        StatefulInteractiveElement, Styled,
+    };
+    use std::hash::{Hash, Hasher};
+
+    let hover = StateColors::from_style(&style);
+    let focus = StateColors::from_focus(&style);
+    let focus_within = StateColors::from_focus_within(&style);
+
+    let mut hasher = std::collections::hash_map::DefaultHasher::new();
+    source.hash(&mut hasher);
+    let cache_key = gpui::SharedString::from(format!("__inline_svg__{}", hasher.finish()));
+
+    let icon = canvas(
+        |_bounds, _window, _cx| {},
+        move |bounds, (), window, cx| {
+            let color: Hsla = window.text_style().color;
+            let _ = window.paint_svg(
+                bounds,
+                cache_key,
+                Some(source.as_bytes()),
+                Default::default(),
+                color,
+                cx,
+            );
+        },
+    )
+    .size_full();
+
+    let mut element = apply_generated_render_styles(div(), style)
+        .child(icon)
+        .id(element_id);
+    if !hover.is_empty() {
+        element = element.hover(move |style| hover.apply(style));
+    }
+    if !focus.is_empty() {
+        element = element.focus(move |style| focus.apply(style));
+    }
+    if !focus_within.is_empty() {
+        element = element.in_focus(move |style| focus_within.apply(style));
+    }
     if let Some(label) = label {
         element = element.role(Role::Image).aria_label(label);
     }
