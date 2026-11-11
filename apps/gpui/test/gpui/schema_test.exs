@@ -26,6 +26,12 @@ defmodule GPUI.SchemaTest do
     assert :border_radius in GPUI.Schema.styles()
     assert :font_weight in GPUI.Schema.styles()
     assert :font_family in GPUI.Schema.styles()
+
+    assert Enum.all?(
+             [:font_style, :underline, :line_through, :text_transform],
+             &(&1 in GPUI.Schema.styles())
+           )
+
     assert :box_shadow in GPUI.Schema.styles()
   end
 

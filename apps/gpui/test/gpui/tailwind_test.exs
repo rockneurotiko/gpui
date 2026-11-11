@@ -12,6 +12,25 @@ defmodule GPUI.TailwindTest do
     end)
   end
 
+  test "normalizes text decoration, italic and transform classes" do
+    assert %{style: style, unknown: []} =
+             GPUI.Tailwind.normalize("italic underline line-through uppercase")
+
+    assert Enum.sort(style) ==
+             [
+               font_style: :italic,
+               line_through: true,
+               text_transform: :uppercase,
+               underline: true
+             ]
+
+    assert %{style: [font_style: :normal, text_transform: :none], unknown: []} =
+             GPUI.Tailwind.normalize("italic not-italic capitalize normal-case")
+
+    assert %{style: [], unknown: []} = GPUI.Tailwind.normalize("underline no-underline")
+    assert %{unknown: ["tracking-wide"]} = GPUI.Tailwind.normalize("tracking-wide")
+  end
+
   test "programmatic UI components normalize classes before serialization" do
     payload =
       GPUI.UI.tree_item(%{

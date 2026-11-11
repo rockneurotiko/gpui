@@ -1064,6 +1064,10 @@ pub(crate) struct StyleAttrs {
     pub(crate) text_overflow: Option<String>,
     pub(crate) text_align: Option<String>,
     pub(crate) truncate: bool,
+    pub(crate) underline: bool,
+    pub(crate) line_through: bool,
+    pub(crate) font_style: Option<String>,
+    pub(crate) text_transform: Option<String>,
     pub(crate) cursor: Option<String>,
     pub(crate) background: Option<u32>,
     pub(crate) color: Option<u32>,
@@ -1258,6 +1262,30 @@ pub(crate) fn apply_generated_style_attr<'a>(
             let value = atom_eq(term, "true");
             let valid = value;
             attrs.truncate = value;
+            valid
+        }
+        value if value == atoms::underline() => {
+            let value = atom_eq(term, "true");
+            let valid = value;
+            attrs.underline = value;
+            valid
+        }
+        value if value == atoms::line_through() => {
+            let value = atom_eq(term, "true");
+            let valid = value;
+            attrs.line_through = value;
+            valid
+        }
+        value if value == atoms::font_style() => {
+            let value = atom_string(term);
+            let valid = value.is_some();
+            attrs.font_style = value;
+            valid
+        }
+        value if value == atoms::text_transform() => {
+            let value = atom_string(term);
+            let valid = value.is_some();
+            attrs.text_transform = value;
             valid
         }
         value if value == atoms::cursor() => {
@@ -1693,6 +1721,21 @@ pub(crate) fn apply_generated_render_styles(
     if style.truncate {
         element = element.truncate();
     }
+    if style.underline {
+        element = element.underline();
+    }
+    if style.line_through {
+        element = element.line_through();
+    }
+    match style.font_style.as_deref() {
+        Some("italic") => {
+            element = element.italic();
+        }
+        Some("normal") => {
+            element = element.not_italic();
+        }
+        _ => {}
+    };
     match style.cursor.as_deref() {
         Some("default") => {
             element = element.cursor_default();

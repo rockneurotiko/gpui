@@ -297,6 +297,18 @@ defmodule GPUI.Tailwind do
   defp normalize_class("text-left", acc), do: put_style(acc, :text_align, :left)
   defp normalize_class("text-center", acc), do: put_style(acc, :text_align, :center)
   defp normalize_class("text-right", acc), do: put_style(acc, :text_align, :right)
+  defp normalize_class("italic", acc), do: put_style(acc, :font_style, :italic)
+  defp normalize_class("not-italic", acc), do: put_style(acc, :font_style, :normal)
+  defp normalize_class("underline", acc), do: put_style(acc, :underline, true)
+  defp normalize_class("line-through", acc), do: put_style(acc, :line_through, true)
+
+  defp normalize_class("no-underline", acc),
+    do: update_in(acc.style, &Keyword.delete(&1, :underline))
+
+  defp normalize_class("uppercase", acc), do: put_style(acc, :text_transform, :uppercase)
+  defp normalize_class("lowercase", acc), do: put_style(acc, :text_transform, :lowercase)
+  defp normalize_class("capitalize", acc), do: put_style(acc, :text_transform, :capitalize)
+  defp normalize_class("normal-case", acc), do: put_style(acc, :text_transform, :none)
   defp normalize_class("truncate", acc), do: put_style(acc, :truncate, true)
   defp normalize_class("cursor-default", acc), do: put_style(acc, :cursor, :default)
   defp normalize_class("cursor-pointer", acc), do: put_style(acc, :cursor, :pointer)

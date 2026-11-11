@@ -20,6 +20,7 @@ defmodule GPUI.Schema.Style do
   @type render ::
           :flex_if_true
           | :shadow_list
+          | {:method_if_true, atom()}
           | {:enum_methods, [{String.t(), atom()}]}
           | {:enum_values, atom(), [{String.t(), [atom()]}]}
           | {:option_method, atom(),

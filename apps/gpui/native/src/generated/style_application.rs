@@ -211,6 +211,21 @@ pub fn apply(element: gpui::Div, style: Style) -> gpui::Div {
     if style.truncate {
         element = element.truncate();
     }
+    if style.underline {
+        element = element.underline();
+    }
+    if style.line_through {
+        element = element.line_through();
+    }
+    match style.font_style.as_deref() {
+        Some("italic") => {
+            element = element.italic();
+        }
+        Some("normal") => {
+            element = element.not_italic();
+        }
+        _ => {}
+    };
     match style.cursor.as_deref() {
         Some("default") => {
             element = element.cursor_default();

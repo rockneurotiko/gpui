@@ -27,6 +27,10 @@ pub(crate) fn style_to_core(wire: StyleAttrs) -> gpui_core::Style {
     style.text_overflow = wire.text_overflow;
     style.text_align = wire.text_align;
     style.truncate = wire.truncate;
+    style.underline = wire.underline;
+    style.line_through = wire.line_through;
+    style.font_style = wire.font_style;
+    style.text_transform = wire.text_transform;
     style.cursor = wire.cursor;
     style.background = wire.background;
     style.color = wire.color;

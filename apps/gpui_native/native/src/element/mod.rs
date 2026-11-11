@@ -305,9 +305,55 @@ pub(crate) fn render_viewport_primitive(
         .into_any_element()
 }
 
+/// Applies a CSS-like `text-transform`; unknown values (including "none") leave the text as is.
+fn transform_text(text: &str, transform: &str) -> String {
+    match transform {
+        "uppercase" => text.to_uppercase(),
+        "lowercase" => text.to_lowercase(),
+        "capitalize" => {
+            let mut at_word_start = true;
+            text.chars()
+                .map(|c| {
+                    let out = if at_word_start {
+                        c.to_uppercase().collect::<String>()
+                    } else {
+                        c.to_string()
+                    };
+                    at_word_start = c.is_whitespace();
+                    out
+                })
+                .collect()
+        }
+        _ => text.to_string(),
+    }
+}
+
+#[cfg(test)]
+mod transform_text_tests {
+    use super::transform_text;
+
+    #[test]
+    fn maps_each_transform() {
+        assert_eq!(transform_text("héllo World", "uppercase"), "HÉLLO WORLD");
+        assert_eq!(transform_text("HÉLLO World", "lowercase"), "héllo world");
+        assert_eq!(
+            transform_text("hello wORLD  éa", "capitalize"),
+            "Hello WORLD  Éa"
+        );
+        assert_eq!(transform_text("", "capitalize"), "");
+        assert_eq!(transform_text("ß", "uppercase"), "SS");
+        assert_eq!(transform_text("abc", "none"), "abc");
+    }
+}
+
 #[cfg(feature = "real-gpui")]
 pub(crate) fn render_text_primitive(text: String, style: StyleAttrs) -> gpui::AnyElement {
     use gpui::{div, IntoElement, ParentElement};
+
+    let text = match style.text_transform.as_deref() {
+        Some(transform) => transform_text(&text, transform),
+        None => text,
+    };
 
     apply_generated_render_styles(div(), style)
         .child(text)

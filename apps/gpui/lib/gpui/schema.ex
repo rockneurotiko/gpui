@@ -180,6 +180,25 @@ defmodule GPUI.Schema do
     },
     %Style{name: :truncate, field: :truncate, type: {:atom_eq, true}, render: :truncate_if_true},
     %Style{
+      name: :underline,
+      field: :underline,
+      type: {:atom_eq, true},
+      render: {:method_if_true, :underline}
+    },
+    %Style{
+      name: :line_through,
+      field: :line_through,
+      type: {:atom_eq, true},
+      render: {:method_if_true, :line_through}
+    },
+    %Style{
+      name: :font_style,
+      field: :font_style,
+      type: :atom_string,
+      render: {:enum_methods, [{"italic", :italic}, {"normal", :not_italic}]}
+    },
+    %Style{name: :text_transform, field: :text_transform, type: :atom_string},
+    %Style{
       name: :cursor,
       field: :cursor,
       type: :atom_string,

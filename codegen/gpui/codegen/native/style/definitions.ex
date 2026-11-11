@@ -133,6 +133,16 @@ defmodule GPUI.Codegen.Native.Style.Definitions do
     end
   end
 
+  defp render_statement(%{field: field, render: {:method_if_true, method}}) do
+    style_field = field_access(:style, field)
+
+    quote do
+      if unquote(style_field) do
+        assign!(element, element.unquote(method)())
+      end
+    end
+  end
+
   defp render_statement(%{field: field, render: :shadow_list}) do
     render_option_value_case(field, fn ->
       quote do
