@@ -86,6 +86,90 @@ defmodule GPUI.Codegen.Native.Decoder do
     end
   end
 
+  @spec shadow_list_value(term()) ::
+          R.option(R.vec(RustQ.Type.path({:gpui_core, :BoxShadowLayer})))
+  defrust shadow_list_value(term) do
+    case decode_as(term, R.vec(term())) do
+      {:ok, items} ->
+        if items.iter().copied().all(fn item -> shadow_value(item).is_some() end) do
+          some(items.into_iter().filter_map(fn item -> shadow_value(item) end).collect())
+        else
+          nil
+        end
+
+      {:error, _reason} -> nil
+    end
+  end
+
+  @spec shadow_value(term()) ::
+          R.option(RustQ.Type.path({:gpui_core, :BoxShadowLayer}))
+  defrust shadow_value(term) do
+    case decode_as(term, {term(), term(), term(), term(), term(), term()}) do
+      {:ok, {x, y, blur, spread, color, inset}} -> shadow_parts([x, y, blur, spread, color, inset])
+      {:error, _reason} -> shadow_vector_value(term)
+    end
+  end
+
+  @spec shadow_vector_value(term()) ::
+          R.option(RustQ.Type.path({:gpui_core, :BoxShadowLayer}))
+  defrustp shadow_vector_value(term) do
+    case decode_as(term, R.vec(term())) do
+      {:ok, parts} when parts.len() == 6 -> shadow_parts(parts)
+      _invalid -> nil
+    end
+  end
+
+  @spec shadow_parts(R.vec(term())) ::
+          R.option(RustQ.Type.path({:gpui_core, :BoxShadowLayer}))
+  defrustp shadow_parts(parts) do
+    case px_value(index(parts, 0)) do
+      {:some, x} -> shadow_parts_y(parts, x)
+      :none -> nil
+    end
+  end
+
+  @spec shadow_parts_y(R.vec(term()), R.f32()) ::
+          R.option(RustQ.Type.path({:gpui_core, :BoxShadowLayer}))
+  defrustp shadow_parts_y(parts, x) do
+    case px_value(index(parts, 1)) do
+      {:some, y} -> shadow_parts_blur(parts, x, y)
+      :none -> nil
+    end
+  end
+
+  @spec shadow_parts_blur(R.vec(term()), R.f32(), R.f32()) ::
+          R.option(RustQ.Type.path({:gpui_core, :BoxShadowLayer}))
+  defrustp shadow_parts_blur(parts, x, y) do
+    case px_value(index(parts, 2)) do
+      {:some, blur} -> shadow_parts_spread(parts, x, y, blur)
+      :none -> nil
+    end
+  end
+
+  @spec shadow_parts_spread(R.vec(term()), R.f32(), R.f32(), R.f32()) ::
+          R.option(RustQ.Type.path({:gpui_core, :BoxShadowLayer}))
+  defrustp shadow_parts_spread(parts, x, y, blur) do
+    case px_value(index(parts, 3)) do
+      {:some, spread} -> shadow_parts_color(parts, x, y, blur, spread)
+      :none -> nil
+    end
+  end
+
+  @spec shadow_parts_color(R.vec(term()), R.f32(), R.f32(), R.f32(), R.f32()) ::
+          R.option(RustQ.Type.path({:gpui_core, :BoxShadowLayer}))
+  defrustp shadow_parts_color(parts, x, y, blur, spread) do
+    case color_value(index(parts, 4)) do
+      {:some, color} ->
+        case decode_as(index(parts, 5), boolean()) do
+          {:ok, inset} -> some({x, y, blur, spread, color, inset})
+          {:error, _reason} -> nil
+        end
+
+      :none ->
+        nil
+    end
+  end
+
   @spec px_value(term()) :: R.option(R.f32())
   defrust px_value(term) do
     case decode_as(term, {term(), term()}) do

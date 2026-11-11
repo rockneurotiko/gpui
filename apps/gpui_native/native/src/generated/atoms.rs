@@ -14,26 +14,26 @@ mod atoms {
         "auto_grow", background = "background", block_projections = "block_projections",
         blur = "blur", border_color = "border_color", border_radius = "border_radius",
         border_width = "border_width", bordered = "bordered", bottom = "bottom", bounds =
-        "bounds", branch = "branch", buffer = "buffer", cancelled = "cancelled",
-        cell_change = "cell_change", change = "change", checked = "checked", children =
-        "children", cleanable = "cleanable", click = "click", clipboard = "clipboard",
-        clipboard_text = "clipboard_text", clipboard_write = "clipboard_write", closable
-        = "closable", close_button = "close_button", collapsed = "collapsed", collapsible
-        = "collapsible", color = "color", command = "command", commands = "commands",
-        compact = "compact", content = "content", copy = "copy", cursor = "cursor", dark
-        = "dark", dashed = "dashed", data = "data", decorations = "decorations", delay =
-        "delay", disabled = "disabled", display = "display", drag_enter = "drag_enter",
-        drag_leave = "drag_leave", drag_move = "drag_move", drop = "drop", edges =
-        "edges", error = "error", event = "event", expanded = "expanded", fallback =
-        "fallback", file_max_bytes = "file_max_bytes", file_prompt = "file_prompt",
-        file_read = "file_read", first = "first", fit = "fit", flex = "flex", flex_basis
-        = "flex_basis", flex_direction = "flex_direction", flex_grow = "flex_grow",
-        flex_shrink = "flex_shrink", flex_wrap = "flex_wrap", focus = "focus",
-        focus_request = "focus_request", follow = "follow", follow_request =
-        "follow_request", font_family = "font_family", font_size = "font_size",
-        font_weight = "font_weight", format = "format", gap = "gap", geometry =
-        "geometry", geometry_ranges = "geometry_ranges", gpui_component =
-        "gpui_component", hard_tabs = "hard_tabs", header_height = "header_height",
+        "bounds", box_shadow = "box_shadow", branch = "branch", buffer = "buffer",
+        cancelled = "cancelled", cell_change = "cell_change", change = "change", checked
+        = "checked", children = "children", cleanable = "cleanable", click = "click",
+        clipboard = "clipboard", clipboard_text = "clipboard_text", clipboard_write =
+        "clipboard_write", closable = "closable", close_button = "close_button",
+        collapsed = "collapsed", collapsible = "collapsible", color = "color", command =
+        "command", commands = "commands", compact = "compact", content = "content", copy
+        = "copy", cursor = "cursor", dark = "dark", dashed = "dashed", data = "data",
+        decorations = "decorations", delay = "delay", disabled = "disabled", display =
+        "display", drag_enter = "drag_enter", drag_leave = "drag_leave", drag_move =
+        "drag_move", drop = "drop", edges = "edges", error = "error", event = "event",
+        expanded = "expanded", fallback = "fallback", file_max_bytes = "file_max_bytes",
+        file_prompt = "file_prompt", file_read = "file_read", first = "first", fit =
+        "fit", flex = "flex", flex_basis = "flex_basis", flex_direction =
+        "flex_direction", flex_grow = "flex_grow", flex_shrink = "flex_shrink", flex_wrap
+        = "flex_wrap", focus = "focus", focus_request = "focus_request", follow =
+        "follow", follow_request = "follow_request", font_family = "font_family",
+        font_size = "font_size", font_weight = "font_weight", format = "format", gap =
+        "gap", geometry = "geometry", geometry_ranges = "geometry_ranges", gpui_component
+        = "gpui_component", hard_tabs = "hard_tabs", header_height = "header_height",
         headless = "headless", height = "height", hit_test = "hit_test", hover_background
         = "hover_background", hover_border_color = "hover_border_color", hover_color =
         "hover_color", hoverable = "hoverable", id = "id", indeterminate =

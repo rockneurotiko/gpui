@@ -134,6 +134,125 @@ defmodule GPUI.Tailwind do
     end
   end
 
+  # Tailwind's default box shadows as {x, y, blur, spread, color, inset}.
+  @shadows %{
+    "none" => [],
+    "2xs" => [{0.0, 1.0, 0.0, 0.0, {:rgba, 13}, false}],
+    "xs" => [{0.0, 1.0, 2.0, 0.0, {:rgba, 13}, false}],
+    "sm" => [{0.0, 1.0, 2.0, 0.0, {:rgba, 13}, false}],
+    "" => [{0.0, 1.0, 3.0, 0.0, {:rgba, 26}, false}, {0.0, 1.0, 2.0, -1.0, {:rgba, 26}, false}],
+    "md" => [{0.0, 4.0, 6.0, -1.0, {:rgba, 26}, false}, {0.0, 2.0, 4.0, -2.0, {:rgba, 26}, false}],
+    "lg" => [
+      {0.0, 10.0, 15.0, -3.0, {:rgba, 26}, false},
+      {0.0, 4.0, 6.0, -4.0, {:rgba, 26}, false}
+    ],
+    "xl" => [
+      {0.0, 20.0, 25.0, -5.0, {:rgba, 26}, false},
+      {0.0, 8.0, 10.0, -6.0, {:rgba, 26}, false}
+    ],
+    "2xl" => [{0.0, 25.0, 50.0, -12.0, {:rgba, 64}, false}],
+    "inner" => [{0.0, 2.0, 4.0, 0.0, {:rgba, 13}, true}]
+  }
+
+  defp shadow(acc, name, class) do
+    case Map.fetch(@shadows, name) do
+      {:ok, layers} -> put_style(acc, :box_shadow, layers)
+      :error -> unknown(acc, class)
+    end
+  end
+
+  # `shadow-[0_1px_2px_#0003,inset_0_0_0_1px_rgba(0,0,0,0.1)]`: layers are comma separated
+  # (outside parentheses), tokens underscore separated.
+  # shortcut: colors must be the last token and contain no underscores, add if needed.
+  defp arbitrary_shadow(acc, rest, class) do
+    with [body, ""] <- String.split(rest, "]", parts: 2),
+         layers when layers != [] <- split_layers(body),
+         {:ok, parsed} <- parse_shadow_layers(layers) do
+      put_style(acc, :box_shadow, parsed)
+    else
+      _invalid -> unknown(acc, class)
+    end
+  end
+
+  defp split_layers(body), do: Regex.split(~r/,(?![^(]*\))/, body)
+
+  defp parse_shadow_layers(layers) do
+    parsed = Enum.map(layers, &parse_shadow_layer/1)
+    if :error in parsed, do: :error, else: {:ok, Enum.map(parsed, &elem(&1, 1))}
+  end
+
+  defp parse_shadow_layer(layer) do
+    {inset, tokens} =
+      case String.split(layer, "_", trim: true) do
+        ["inset" | tokens] -> {true, tokens}
+        tokens -> {false, tokens}
+      end
+
+    with true <- length(tokens) in 3..5,
+         {lengths, [color]} <- Enum.split(tokens, -1),
+         {:ok, [x, y | rest]} <- shadow_lengths(lengths),
+         [blur, spread] <- Enum.take(rest ++ [0.0, 0.0], 2),
+         true <- blur >= 0.0,
+         {:ok, color} <- shadow_color(color) do
+      {:ok, {x, y, blur, spread, color, inset}}
+    else
+      _invalid -> :error
+    end
+  end
+
+  defp shadow_lengths(tokens) do
+    lengths = Enum.map(tokens, &shadow_length/1)
+    if :error in lengths, do: :error, else: {:ok, lengths}
+  end
+
+  defp shadow_length(token) do
+    with true <- Regex.match?(~r/^-?\d+(\.\d+)?(px)?$/, token),
+         {number, _unit} <- Float.parse(token) do
+      number
+    else
+      _invalid -> :error
+    end
+  end
+
+  defp shadow_color("#" <> hex) when byte_size(hex) in [3, 4, 6, 8] do
+    with {:ok, color} <- parse_hex_color(hex), do: {:ok, to_rgba(color)}
+  end
+
+  defp shadow_color(color) do
+    with [_, channels] <- Regex.run(~r/^rgba?\((.*)\)$/, color),
+         [r, g, b | alpha] <- channels |> String.split(",") |> Enum.map(&String.trim/1),
+         [r, g, b] <- Enum.map([r, g, b], &Integer.parse/1),
+         true <- Enum.all?([r, g, b], &match?({n, ""} when n in 0..255, &1)),
+         {:ok, alpha} <- shadow_alpha(alpha) do
+      {:ok,
+       {:rgba,
+        Bitwise.bsl(elem(r, 0), 24) + Bitwise.bsl(elem(g, 0), 16) + Bitwise.bsl(elem(b, 0), 8) +
+          alpha}}
+    else
+      _invalid -> :error
+    end
+  end
+
+  defp to_rgba({:rgba, _value} = color), do: color
+  defp to_rgba({:rgb, value}), do: {:rgba, Bitwise.bsl(value, 8) + 255}
+
+  defp shadow_alpha([]), do: {:ok, 255}
+
+  defp shadow_alpha([alpha]) do
+    {number, divisor} =
+      case String.split_at(alpha, -1) do
+        {percentage, "%"} -> {percentage, 100.0}
+        _plain -> {alpha, 1.0}
+      end
+
+    case Float.parse(number) do
+      {value, ""} when value >= 0 and value <= divisor -> {:ok, round(255 * value / divisor)}
+      _invalid -> :error
+    end
+  end
+
+  defp shadow_alpha(_alpha), do: :error
+
   defp normalize_class("relative", acc), do: put_style(acc, :position, :relative)
   defp normalize_class("absolute", acc), do: put_style(acc, :position, :absolute)
   defp normalize_class("flex-1", acc), do: put_style(acc, :flex, :one)
@@ -283,6 +402,12 @@ defmodule GPUI.Tailwind do
   defp normalize_class("hover:border-" <> color, acc),
     do: color(acc, :hover_border_color, color, "hover:border-")
 
+  defp normalize_class("shadow", acc), do: shadow(acc, "", "shadow")
+
+  defp normalize_class("shadow-[" <> rest, acc),
+    do: arbitrary_shadow(acc, rest, "shadow-[" <> rest)
+
+  defp normalize_class("shadow-" <> name = class, acc), do: shadow(acc, name, class)
   defp normalize_class("bg-" <> color, acc), do: color(acc, :background, color, "bg-")
   defp normalize_class("text-" <> size_or_color, acc), do: text(size_or_color, acc)
   defp normalize_class("leading-" <> value, acc), do: line_height(value, acc)

@@ -77,6 +77,99 @@ pub(crate) fn color_vector_value<'a>(term: Term<'a>) -> Option<u32> {
     }
 }
 #[cfg(feature = "real-gpui")]
+pub(crate) fn shadow_list_value<'a>(
+    term: Term<'a>,
+) -> Option<Vec<gpui_core::BoxShadowLayer>> {
+    match term.decode::<Vec<Term<'a>>>() {
+        Ok(items) => {
+            if items.iter().copied().all(|item| shadow_value(item).is_some()) {
+                Some(items.into_iter().filter_map(|item| shadow_value(item)).collect())
+            } else {
+                None
+            }
+        }
+        Err(_reason) => None,
+    }
+}
+#[cfg(feature = "real-gpui")]
+pub(crate) fn shadow_value<'a>(term: Term<'a>) -> Option<gpui_core::BoxShadowLayer> {
+    match term.decode::<(Term<'a>, Term<'a>, Term<'a>, Term<'a>, Term<'a>, Term<'a>)>() {
+        Ok((x, y, blur, spread, color, inset)) => {
+            shadow_parts(vec![x, y, blur, spread, color, inset])
+        }
+        Err(_reason) => shadow_vector_value(term),
+    }
+}
+#[cfg(feature = "real-gpui")]
+pub(crate) fn shadow_vector_value<'a>(
+    term: Term<'a>,
+) -> Option<gpui_core::BoxShadowLayer> {
+    match term.decode::<Vec<Term<'a>>>() {
+        Ok(parts) if parts.len() == 6 => shadow_parts(parts),
+        _invalid => None,
+    }
+}
+#[cfg(feature = "real-gpui")]
+pub(crate) fn shadow_parts<'a>(
+    parts: Vec<Term<'a>>,
+) -> Option<gpui_core::BoxShadowLayer> {
+    match px_value(parts[0]) {
+        Some(x) => shadow_parts_y(parts, x),
+        None => None,
+    }
+}
+#[cfg(feature = "real-gpui")]
+pub(crate) fn shadow_parts_y<'a>(
+    parts: Vec<Term<'a>>,
+    x: f32,
+) -> Option<gpui_core::BoxShadowLayer> {
+    match px_value(parts[1]) {
+        Some(y) => shadow_parts_blur(parts, x, y),
+        None => None,
+    }
+}
+#[cfg(feature = "real-gpui")]
+pub(crate) fn shadow_parts_blur<'a>(
+    parts: Vec<Term<'a>>,
+    x: f32,
+    y: f32,
+) -> Option<gpui_core::BoxShadowLayer> {
+    match px_value(parts[2]) {
+        Some(blur) => shadow_parts_spread(parts, x, y, blur),
+        None => None,
+    }
+}
+#[cfg(feature = "real-gpui")]
+pub(crate) fn shadow_parts_spread<'a>(
+    parts: Vec<Term<'a>>,
+    x: f32,
+    y: f32,
+    blur: f32,
+) -> Option<gpui_core::BoxShadowLayer> {
+    match px_value(parts[3]) {
+        Some(spread) => shadow_parts_color(parts, x, y, blur, spread),
+        None => None,
+    }
+}
+#[cfg(feature = "real-gpui")]
+pub(crate) fn shadow_parts_color<'a>(
+    parts: Vec<Term<'a>>,
+    x: f32,
+    y: f32,
+    blur: f32,
+    spread: f32,
+) -> Option<gpui_core::BoxShadowLayer> {
+    match color_value(parts[4]) {
+        Some(color) => {
+            match parts[5].decode::<bool>() {
+                Ok(inset) => Some((x, y, blur, spread, color, inset)),
+                Err(_reason) => None,
+            }
+        }
+        None => None,
+    }
+}
+#[cfg(feature = "real-gpui")]
 pub(crate) fn px_value<'a>(term: Term<'a>) -> Option<f32> {
     match term.decode::<(Term<'a>, Term<'a>)>() {
         Ok((unit, value)) => if atom_eq(unit, "px") { number_value(value) } else { None }
@@ -1003,6 +1096,7 @@ pub(crate) struct StyleAttrs {
     pub(crate) border_radius: Option<f32>,
     pub(crate) border_width: Option<f32>,
     pub(crate) border_color: Option<u32>,
+    pub(crate) box_shadow: Option<Vec<gpui_core::BoxShadowLayer>>,
     pub(crate) hover_background: Option<u32>,
     pub(crate) hover_color: Option<u32>,
     pub(crate) hover_border_color: Option<u32>,
@@ -1356,6 +1450,12 @@ pub(crate) fn apply_generated_style_attr<'a>(
             let value = color_value(term);
             let valid = value.is_some();
             attrs.border_color = value;
+            valid
+        }
+        value if value == atoms::box_shadow() => {
+            let value = shadow_list_value(term);
+            let valid = value.is_some();
+            attrs.box_shadow = value;
             valid
         }
         value if value == atoms::hover_background() => {
@@ -1818,6 +1918,27 @@ pub(crate) fn apply_generated_render_styles(
     match style.border_color {
         Some(value) => {
             element = element.border_color(gpui::rgba(value));
+        }
+        _ => {}
+    };
+    match style.box_shadow {
+        Some(value) => {
+            element = element
+                .shadow(
+                    value
+                        .into_iter()
+                        .map(|(x, y, blur, spread, color, inset)| {
+                            let shadow = gpui::BoxShadow::new(
+                                    gpui::px(x),
+                                    gpui::px(y),
+                                    gpui::rgba(color).into(),
+                                )
+                                .blur_radius(gpui::px(blur))
+                                .spread_radius(gpui::px(spread));
+                            if inset { shadow.inset() } else { shadow }
+                        })
+                        .collect(),
+                );
         }
         _ => {}
     };

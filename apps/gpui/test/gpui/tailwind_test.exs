@@ -324,4 +324,34 @@ defmodule GPUI.TailwindTest do
              unknown: ["group-hover:bg-blue-500", "w-[calc(100%-1rem)]", "mx-auto"]
            } = GPUI.Tailwind.normalize("flex group-hover:bg-blue-500 w-[calc(100%-1rem)] mx-auto")
   end
+
+  test "normalizes box shadows" do
+    assert shadow("shadow-none") == []
+    assert shadow("shadow-sm") == [{0.0, 1.0, 2.0, 0.0, {:rgba, 13}, false}]
+    assert [_, {+0.0, 1.0, 2.0, -1.0, {:rgba, 26}, false}] = shadow("shadow")
+    assert shadow("shadow-2xl") == [{0.0, 25.0, 50.0, -12.0, {:rgba, 64}, false}]
+    assert shadow("shadow-inner") == [{0.0, 2.0, 4.0, 0.0, {:rgba, 13}, true}]
+
+    for name <- ~w(2xs xs md lg xl), do: assert([_ | _] = shadow("shadow-#{name}"))
+  end
+
+  test "normalizes arbitrary box shadows" do
+    assert shadow("shadow-[0_1px_2px_#11223344]") ==
+             [{0.0, 1.0, 2.0, 0.0, {:rgba, 0x11223344}, false}]
+
+    assert shadow("shadow-[1_-2.5px_3px_4px_#f00]") ==
+             [{1.0, -2.5, 3.0, 4.0, {:rgba, 0xFF0000FF}, false}]
+
+    assert shadow("shadow-[0_1px_2px_rgba(0,0,0,0.1),inset_0_0_0_1px_rgb(1,2,3,50%)]") == [
+             {0.0, 1.0, 2.0, 0.0, {:rgba, 0x0000001A}, false},
+             {0.0, 0.0, 0.0, 1.0, {:rgba, 0x01020380}, true}
+           ]
+
+    for class <-
+          ~w(shadow-red-500 shadow-[0_1px] shadow-[0_1px_2px_nope] shadow-[0_-1px_-2px_#000] shadow-[0_1px_2px_#000 shadow-[]) do
+      assert %{style: [], unknown: [^class]} = GPUI.Tailwind.normalize(class)
+    end
+  end
+
+  defp shadow(class), do: GPUI.Tailwind.normalize(class).style[:box_shadow]
 end

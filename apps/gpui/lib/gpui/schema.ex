@@ -341,6 +341,7 @@ defmodule GPUI.Schema do
       type: :color,
       render: {:option_method, :border_color, :color}
     },
+    %Style{name: :box_shadow, field: :box_shadow, type: :shadow_list, render: :shadow_list},
     # Hover colors are not rendered with the base style: the native container applies
     # them through its hover state.
     %Style{name: :hover_background, field: :hover_background, type: :color},

@@ -439,5 +439,26 @@ pub fn apply(element: gpui::Div, style: Style) -> gpui::Div {
         }
         _ => {}
     };
+    match style.box_shadow {
+        Some(value) => {
+            element = element
+                .shadow(
+                    value
+                        .into_iter()
+                        .map(|(x, y, blur, spread, color, inset)| {
+                            let shadow = gpui::BoxShadow::new(
+                                    gpui::px(x),
+                                    gpui::px(y),
+                                    gpui::rgba(color).into(),
+                                )
+                                .blur_radius(gpui::px(blur))
+                                .spread_radius(gpui::px(spread));
+                            if inset { shadow.inset() } else { shadow }
+                        })
+                        .collect(),
+                );
+        }
+        _ => {}
+    };
     element
 }

@@ -8,6 +8,7 @@ defmodule GPUI.Schema.Style do
           :atom_string
           | :string
           | :color
+          | :shadow_list
           | :number
           | :px
           | :length
@@ -18,6 +19,7 @@ defmodule GPUI.Schema.Style do
 
   @type render ::
           :flex_if_true
+          | :shadow_list
           | {:enum_methods, [{String.t(), atom()}]}
           | {:enum_values, atom(), [{String.t(), [atom()]}]}
           | {:option_method, atom(),
