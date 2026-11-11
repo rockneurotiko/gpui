@@ -90,6 +90,10 @@ Keep the diff against `upstream/main` small and mergeable. Commands are in `just
 - Added: `hover:bg-*`, `hover:text-*`, `hover:border-*` (schema: `apps/gpui/lib/gpui/schema.ex`;
   parsing: `apps/gpui/lib/gpui/tailwind.ex`; native: `HoverColors` in
   `apps/gpui_native/native/src/element/event.rs`).
+- `focus-within:` follows CSS (the box contains the focus; GPUI's `in_focus` is the reverse) and
+  `focus:`/`focus-within:` work on `text_input`; text inputs with an `id` keep their entity, and
+  so their focus, when the tree above them changes (`render_input_primitive`,
+  `render_container_primitive` in `apps/gpui_native/native/src/element/mod.rs`).
 - `apps/gpui_native/native` names `gpui_core`/`gpui_components` by git (root `Cargo.toml` patches
   them back to local paths here) and has its own `Cargo.lock` and `rust-toolchain.toml`, so the
   package builds from a sparse checkout.

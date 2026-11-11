@@ -596,10 +596,18 @@ pub(crate) fn render_input_primitive(
     } = input_node;
     let runtime = context.runtime.clone();
     let window_id = context.window_id;
-    let input_id = format!(
-        "gpui-elixir-input-{window_id}-{}-{element_id}",
-        context.id_namespace
-    );
+    // Element numbers shift whenever the tree above changes, which would replace the input
+    // and drop its focus and selection, so an input with an id is keyed by that id.
+    let input_id = match &stable_id {
+        Some(id) => format!(
+            "gpui-elixir-input-{window_id}-{}-id-{id}",
+            context.id_namespace
+        ),
+        None => format!(
+            "gpui-elixir-input-{window_id}-{}-{element_id}",
+            context.id_namespace
+        ),
+    };
     let focus_enabled = focus_request > 0 || focus.is_some() || blur.is_some();
     let public_id = stable_id.unwrap_or_else(|| input_id.clone());
     if focus_enabled {
@@ -665,7 +673,19 @@ pub(crate) fn render_input_primitive(
         );
     }
 
-    let element = apply_generated_render_styles(div(), style).child(input);
+    // The input's box takes its focus colours while the input has the focus. The input is a
+    // view of its own that tracks the handle, so this is decided here rather than by the box.
+    let states = [
+        StateColors::from_focus(&style),
+        StateColors::from_focus_within(&style),
+    ];
+    let mut element = apply_generated_render_styles(div(), style);
+    if focus_handle.is_focused(context.window) {
+        states
+            .into_iter()
+            .for_each(|colors| colors.refine(&mut element));
+    }
+    let element = element.child(input);
     apply_input_events(element, input_id, keydown, keyup, runtime, window_id)
 }
 
@@ -1007,12 +1027,45 @@ pub(crate) fn render_container_primitive(
         accessibility.role = Some(AccessibilityRole::Button);
     }
 
-    if focus_request > 0 || focus.is_some() || blur.is_some() {
+    let focus_contract = focus_request > 0 || focus.is_some() || blur.is_some();
+    if focus_contract {
         let id = stable_id
             .clone()
             .expect("focus-enabled containers require stable IDs");
         element = apply_focus_contract(element, id, focus_request, focus, blur, true, context);
     }
+
+    // GPUI's `in_focus` styles an element inside the focused one, the reverse of CSS
+    // focus-within. A plain box (a field around an input) tracks a handle of its own to see
+    // whether it contains the focus, and never takes the focus: a click on its padding must
+    // leave the input focused.
+    let focus_within = if !focus_contract
+        && click.is_none()
+        && focus_colors.is_empty()
+        && !focus_within.is_empty()
+    {
+        let key = stable_id
+            .clone()
+            .unwrap_or_else(|| format!("{}-{element_id}", context.id_namespace));
+        let handle = context
+            .window
+            .use_keyed_state(format!("{key}-focus-within"), context.cx, |_, cx| {
+                cx.focus_handle()
+            })
+            .read(context.cx)
+            .clone();
+        if handle.contains_focused(context.window, context.cx) {
+            focus_within.refine(&mut element);
+        }
+        element = element
+            .track_focus(&handle)
+            .on_mouse_down(gpui::MouseButton::Left, |_event, window, _cx| {
+                window.prevent_default()
+            });
+        StateColors::default()
+    } else {
+        focus_within
+    };
 
     if tag == GeneratedElementTag::Scroll {
         let scroll_id = stable_id.clone().unwrap_or_else(|| {

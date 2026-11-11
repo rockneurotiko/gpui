@@ -33,4 +33,36 @@ defmodule GPUI.Test.Native.FocusStyleTest do
     assert ^ui = focus(ui, "field")
     assert ^ui = focus(ui, "field")
   end
+
+  defmodule FieldView do
+    use GPUI.View
+
+    @impl GPUI.View
+    def render(assigns) do
+      assigns =
+        Map.put(assigns, :banner, if(assigns.banner, do: ~GPUI"<text>Banner</text>", else: []))
+
+      ~GPUI"""
+      <div id="screen">
+        {assigns.banner}
+        <div class="p-2 border border-[#cbd5e1] focus-within:border-[#2563eb]">
+          <text_input id="query" value={assigns.value} focus_request={1} phx-change="query" class="focus:bg-[#eff6ff]"/>
+        </div>
+      </div>
+      """
+    end
+  end
+
+  test "a focused input in a focus-within box keeps the focus as the tree above it changes",
+       %{ui: ui} do
+    render(ui, FieldView, banner: false, value: "")
+    settle(ui)
+    type(ui, "a")
+    assert_receive {:gpui, ^ui, {:event, %{type: :change, event: "query", value: "a"}}}
+
+    render(ui, FieldView, banner: true, value: "a")
+    settle(ui)
+    type(ui, "b")
+    assert_receive {:gpui, ^ui, {:event, %{type: :change, event: "query", value: "ab"}}}
+  end
 end

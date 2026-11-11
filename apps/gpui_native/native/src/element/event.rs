@@ -106,6 +106,16 @@ impl StateColors {
             && self.opacity.is_none()
     }
 
+    /// Lays these colours over the element's own style, for a state decided while rendering.
+    #[cfg(feature = "real-gpui")]
+    pub(crate) fn refine(self, element: &mut gpui::Div) {
+        use gpui::{Refineable, Styled};
+
+        element
+            .style()
+            .refine(&self.apply(gpui::StyleRefinement::default()));
+    }
+
     pub(crate) fn apply(self, mut style: gpui::StyleRefinement) -> gpui::StyleRefinement {
         use gpui::Styled;
 
