@@ -94,6 +94,10 @@ Keep the diff against `upstream/main` small and mergeable. Commands are in `just
   `focus:`/`focus-within:` work on `text_input`; text inputs with an `id` keep their entity, and
   so their focus, when the tree above them changes (`render_input_primitive`,
   `render_container_primitive` in `apps/gpui_native/native/src/element/mod.rs`).
+- gpui-component's rem (its theme font size) follows the window root element's font size, so its
+  widgets (select menus, sliders, tooltips) scale with the app's text; windows larger than the
+  screen are fitted to it (`sync_component_font_size`, `open_gpui_window` in
+  `apps/gpui_native/native/src/window.rs`).
 - `apps/gpui_native/native` names `gpui_core`/`gpui_components` by git (root `Cargo.toml` patches
   them back to local paths here) and has its own `Cargo.lock` and `rust-toolchain.toml`, so the
   package builds from a sparse checkout.

@@ -712,6 +712,24 @@ fn load_fonts(fonts: Vec<Vec<u8>>, cx: &mut gpui::App) -> Result<(), String> {
     Ok(())
 }
 
+/// gpui-component sizes its widgets in rems and takes the rem from its theme's font size. That
+/// follows the font size of the window's root element, as in CSS, so the widgets grow with the
+/// app's text; without one it is the default 16px.
+#[cfg(feature = "components")]
+fn sync_component_font_size(tree: &ElementNode, cx: &mut gpui::App) {
+    fn root_font_size(node: &ElementNode) -> Option<f32> {
+        match node {
+            ElementNode::Viewport(viewport) => viewport.children.first().and_then(root_font_size),
+            ElementNode::Div(node) => node.style.font_size,
+            _ => None,
+        }
+    }
+    let font_size = gpui::px(root_font_size(tree).unwrap_or(16.0));
+    if gpui_component::Theme::global(cx).font_size != font_size {
+        gpui_component::Theme::global_mut(cx).font_size = font_size;
+    }
+}
+
 #[cfg(feature = "components")]
 fn set_component_theme(
     mode: NativeThemeMode,
@@ -775,6 +793,8 @@ fn update_gpui_window(
     let window = windows
         .get(&key)
         .ok_or_else(|| "unknown_window".to_string())?;
+    #[cfg(feature = "components")]
+    sync_component_font_size(&tree, cx);
     *window
         .state
         .tree
@@ -929,8 +949,16 @@ fn open_gpui_window(
         focus,
         blur,
     } = config;
-    let bounds = Bounds::centered(None, size(px(width), px(height)), cx);
-    let window_min_size = min_size.map(|(width, height)| size(px(width), px(height)));
+    // Sizes larger than the screen (an app scaled up for readability) are fitted to it.
+    let screen = cx
+        .primary_display()
+        .map(|display| display.visible_bounds().size);
+    let fit = |width: f32, height: f32| match screen {
+        Some(screen) => size(px(width).min(screen.width), px(height).min(screen.height)),
+        None => size(px(width), px(height)),
+    };
+    let bounds = Bounds::centered(None, fit(width, height), cx);
+    let window_min_size = min_size.map(|(width, height)| fit(width, height));
     let titlebar = content_chrome.then(|| TitlebarOptions {
         title: Some(title.clone().into()),
         appears_transparent: true,
