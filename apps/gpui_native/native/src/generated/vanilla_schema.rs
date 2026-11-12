@@ -8,6 +8,7 @@ pub enum GeneratedComponentKind {
     TextSurface,
     Input,
     Image,
+    Svg,
     Text,
     EdgeFadeComponent,
     FrostComponent,
@@ -24,6 +25,10 @@ pub(crate) fn atom_eq<'a>(term: Term<'a>, expected: &str) -> bool {
 #[cfg(feature = "real-gpui")]
 pub(crate) fn atom_string<'a>(term: Term<'a>) -> Option<String> {
     term.atom_to_string().ok()
+}
+#[cfg(feature = "real-gpui")]
+pub(crate) fn string_value<'a>(term: Term<'a>) -> Option<String> {
+    term.decode::<String>().ok()
 }
 #[cfg(feature = "real-gpui")]
 pub(crate) fn number_value<'a>(term: Term<'a>) -> Option<f32> {
@@ -70,6 +75,99 @@ pub(crate) fn color_vector_value<'a>(term: Term<'a>) -> Option<u32> {
             }
         }
         Err(_reason) => None,
+    }
+}
+#[cfg(feature = "real-gpui")]
+pub(crate) fn shadow_list_value<'a>(
+    term: Term<'a>,
+) -> Option<Vec<gpui_core::BoxShadowLayer>> {
+    match term.decode::<Vec<Term<'a>>>() {
+        Ok(items) => {
+            if items.iter().copied().all(|item| shadow_value(item).is_some()) {
+                Some(items.into_iter().filter_map(|item| shadow_value(item)).collect())
+            } else {
+                None
+            }
+        }
+        Err(_reason) => None,
+    }
+}
+#[cfg(feature = "real-gpui")]
+pub(crate) fn shadow_value<'a>(term: Term<'a>) -> Option<gpui_core::BoxShadowLayer> {
+    match term.decode::<(Term<'a>, Term<'a>, Term<'a>, Term<'a>, Term<'a>, Term<'a>)>() {
+        Ok((x, y, blur, spread, color, inset)) => {
+            shadow_parts(vec![x, y, blur, spread, color, inset])
+        }
+        Err(_reason) => shadow_vector_value(term),
+    }
+}
+#[cfg(feature = "real-gpui")]
+pub(crate) fn shadow_vector_value<'a>(
+    term: Term<'a>,
+) -> Option<gpui_core::BoxShadowLayer> {
+    match term.decode::<Vec<Term<'a>>>() {
+        Ok(parts) if parts.len() == 6 => shadow_parts(parts),
+        _invalid => None,
+    }
+}
+#[cfg(feature = "real-gpui")]
+pub(crate) fn shadow_parts<'a>(
+    parts: Vec<Term<'a>>,
+) -> Option<gpui_core::BoxShadowLayer> {
+    match px_value(parts[0]) {
+        Some(x) => shadow_parts_y(parts, x),
+        None => None,
+    }
+}
+#[cfg(feature = "real-gpui")]
+pub(crate) fn shadow_parts_y<'a>(
+    parts: Vec<Term<'a>>,
+    x: f32,
+) -> Option<gpui_core::BoxShadowLayer> {
+    match px_value(parts[1]) {
+        Some(y) => shadow_parts_blur(parts, x, y),
+        None => None,
+    }
+}
+#[cfg(feature = "real-gpui")]
+pub(crate) fn shadow_parts_blur<'a>(
+    parts: Vec<Term<'a>>,
+    x: f32,
+    y: f32,
+) -> Option<gpui_core::BoxShadowLayer> {
+    match px_value(parts[2]) {
+        Some(blur) => shadow_parts_spread(parts, x, y, blur),
+        None => None,
+    }
+}
+#[cfg(feature = "real-gpui")]
+pub(crate) fn shadow_parts_spread<'a>(
+    parts: Vec<Term<'a>>,
+    x: f32,
+    y: f32,
+    blur: f32,
+) -> Option<gpui_core::BoxShadowLayer> {
+    match px_value(parts[3]) {
+        Some(spread) => shadow_parts_color(parts, x, y, blur, spread),
+        None => None,
+    }
+}
+#[cfg(feature = "real-gpui")]
+pub(crate) fn shadow_parts_color<'a>(
+    parts: Vec<Term<'a>>,
+    x: f32,
+    y: f32,
+    blur: f32,
+    spread: f32,
+) -> Option<gpui_core::BoxShadowLayer> {
+    match color_value(parts[4]) {
+        Some(color) => {
+            match parts[5].decode::<bool>() {
+                Ok(inset) => Some((x, y, blur, spread, color, inset)),
+                Err(_reason) => None,
+            }
+        }
+        None => None,
     }
 }
 #[cfg(feature = "real-gpui")]
@@ -454,6 +552,13 @@ pub(crate) struct InputNode {
 }
 #[derive(Clone, Debug)]
 #[cfg(feature = "real-gpui")]
+pub(crate) struct SvgNode {
+    pub(crate) source: String,
+    pub(crate) style: StyleAttrs,
+    pub(crate) label: Option<String>,
+}
+#[derive(Clone, Debug)]
+#[cfg(feature = "real-gpui")]
 pub(crate) struct TextNode {
     pub(crate) text: String,
     pub(crate) style: StyleAttrs,
@@ -505,6 +610,7 @@ pub(crate) struct RichTextRunNode {
     pub(crate) background: Option<u32>,
     pub(crate) font_weight: Option<String>,
     pub(crate) font_style: Option<String>,
+    pub(crate) font_family: Option<String>,
     pub(crate) underline: Option<u32>,
     pub(crate) underline_style: Option<String>,
     pub(crate) strikethrough: Option<u32>,
@@ -726,6 +832,22 @@ pub(crate) fn decode_image_node<'a>(
     Ok(
         ElementNode::Image(ImageNode {
             image,
+            style: decode_style(term)?,
+            label: non_empty_string_attr(term, atoms::label()),
+        }),
+    )
+}
+#[cfg(feature = "real-gpui")]
+#[allow(clippy::redundant_field_names)]
+pub(crate) fn decode_svg_node<'a>(
+    term: Term<'a>,
+    _tag: GeneratedElementTag,
+) -> NifResult<ElementNode> {
+    let attrs = decode_element_attrs(term)?;
+    let source = attrs.map_get(atoms::source())?.decode::<String>()?;
+    Ok(
+        ElementNode::Svg(SvgNode {
+            source,
             style: decode_style(term)?,
             label: non_empty_string_attr(term, atoms::label()),
         }),
@@ -967,10 +1089,15 @@ pub(crate) struct StyleAttrs {
     pub(crate) text_overflow: Option<String>,
     pub(crate) text_align: Option<String>,
     pub(crate) truncate: bool,
+    pub(crate) underline: bool,
+    pub(crate) line_through: bool,
+    pub(crate) font_style: Option<String>,
+    pub(crate) text_transform: Option<String>,
     pub(crate) cursor: Option<String>,
     pub(crate) background: Option<u32>,
     pub(crate) color: Option<u32>,
     pub(crate) font_size: Option<f32>,
+    pub(crate) font_family: Option<String>,
     pub(crate) font_weight: Option<String>,
     pub(crate) line_height: Option<f32>,
     pub(crate) opacity: Option<f32>,
@@ -996,8 +1123,38 @@ pub(crate) struct StyleAttrs {
     pub(crate) min_height: Option<gpui::DefiniteLength>,
     pub(crate) max_height: Option<gpui::DefiniteLength>,
     pub(crate) border_radius: Option<f32>,
+    pub(crate) border_top_left_radius: Option<f32>,
+    pub(crate) border_top_right_radius: Option<f32>,
+    pub(crate) border_bottom_left_radius: Option<f32>,
+    pub(crate) border_bottom_right_radius: Option<f32>,
     pub(crate) border_width: Option<f32>,
+    pub(crate) border_top_width: Option<f32>,
+    pub(crate) border_bottom_width: Option<f32>,
+    pub(crate) border_left_width: Option<f32>,
+    pub(crate) border_right_width: Option<f32>,
+    pub(crate) border_style: Option<String>,
     pub(crate) border_color: Option<u32>,
+    pub(crate) box_shadow: Option<Vec<gpui_core::BoxShadowLayer>>,
+    pub(crate) hover_background: Option<u32>,
+    pub(crate) hover_color: Option<u32>,
+    pub(crate) hover_border_color: Option<u32>,
+    pub(crate) hover_opacity: Option<f32>,
+    pub(crate) active_background: Option<u32>,
+    pub(crate) active_color: Option<u32>,
+    pub(crate) active_border_color: Option<u32>,
+    pub(crate) active_opacity: Option<f32>,
+    pub(crate) focus_background: Option<u32>,
+    pub(crate) focus_color: Option<u32>,
+    pub(crate) focus_border_color: Option<u32>,
+    pub(crate) focus_opacity: Option<f32>,
+    pub(crate) focus_within_background: Option<u32>,
+    pub(crate) focus_within_color: Option<u32>,
+    pub(crate) focus_within_border_color: Option<u32>,
+    pub(crate) focus_within_opacity: Option<f32>,
+    pub(crate) focus_visible_background: Option<u32>,
+    pub(crate) focus_visible_color: Option<u32>,
+    pub(crate) focus_visible_border_color: Option<u32>,
+    pub(crate) focus_visible_opacity: Option<f32>,
 }
 #[cfg(feature = "real-gpui")]
 pub(crate) fn full_length() -> gpui::DefiniteLength {
@@ -1158,6 +1315,30 @@ pub(crate) fn apply_generated_style_attr<'a>(
             attrs.truncate = value;
             valid
         }
+        value if value == atoms::underline() => {
+            let value = atom_eq(term, "true");
+            let valid = value;
+            attrs.underline = value;
+            valid
+        }
+        value if value == atoms::line_through() => {
+            let value = atom_eq(term, "true");
+            let valid = value;
+            attrs.line_through = value;
+            valid
+        }
+        value if value == atoms::font_style() => {
+            let value = atom_string(term);
+            let valid = value.is_some();
+            attrs.font_style = value;
+            valid
+        }
+        value if value == atoms::text_transform() => {
+            let value = atom_string(term);
+            let valid = value.is_some();
+            attrs.text_transform = value;
+            valid
+        }
         value if value == atoms::cursor() => {
             let value = atom_string(term);
             let valid = value.is_some();
@@ -1180,6 +1361,12 @@ pub(crate) fn apply_generated_style_attr<'a>(
             let value = px_value(term);
             let valid = value.is_some();
             attrs.font_size = value;
+            valid
+        }
+        value if value == atoms::font_family() => {
+            let value = string_value(term);
+            let valid = value.is_some();
+            attrs.font_family = value;
             valid
         }
         value if value == atoms::font_weight() => {
@@ -1332,16 +1519,196 @@ pub(crate) fn apply_generated_style_attr<'a>(
             attrs.border_radius = value;
             valid
         }
+        value if value == atoms::border_top_left_radius() => {
+            let value = radius_value(term);
+            let valid = value.is_some();
+            attrs.border_top_left_radius = value;
+            valid
+        }
+        value if value == atoms::border_top_right_radius() => {
+            let value = radius_value(term);
+            let valid = value.is_some();
+            attrs.border_top_right_radius = value;
+            valid
+        }
+        value if value == atoms::border_bottom_left_radius() => {
+            let value = radius_value(term);
+            let valid = value.is_some();
+            attrs.border_bottom_left_radius = value;
+            valid
+        }
+        value if value == atoms::border_bottom_right_radius() => {
+            let value = radius_value(term);
+            let valid = value.is_some();
+            attrs.border_bottom_right_radius = value;
+            valid
+        }
         value if value == atoms::border_width() => {
             let value = px_value(term);
             let valid = value.is_some();
             attrs.border_width = value;
             valid
         }
+        value if value == atoms::border_top_width() => {
+            let value = px_value(term);
+            let valid = value.is_some();
+            attrs.border_top_width = value;
+            valid
+        }
+        value if value == atoms::border_bottom_width() => {
+            let value = px_value(term);
+            let valid = value.is_some();
+            attrs.border_bottom_width = value;
+            valid
+        }
+        value if value == atoms::border_left_width() => {
+            let value = px_value(term);
+            let valid = value.is_some();
+            attrs.border_left_width = value;
+            valid
+        }
+        value if value == atoms::border_right_width() => {
+            let value = px_value(term);
+            let valid = value.is_some();
+            attrs.border_right_width = value;
+            valid
+        }
+        value if value == atoms::border_style() => {
+            let value = atom_string(term);
+            let valid = value.is_some();
+            attrs.border_style = value;
+            valid
+        }
         value if value == atoms::border_color() => {
             let value = color_value(term);
             let valid = value.is_some();
             attrs.border_color = value;
+            valid
+        }
+        value if value == atoms::box_shadow() => {
+            let value = shadow_list_value(term);
+            let valid = value.is_some();
+            attrs.box_shadow = value;
+            valid
+        }
+        value if value == atoms::hover_background() => {
+            let value = color_value(term);
+            let valid = value.is_some();
+            attrs.hover_background = value;
+            valid
+        }
+        value if value == atoms::hover_color() => {
+            let value = color_value(term);
+            let valid = value.is_some();
+            attrs.hover_color = value;
+            valid
+        }
+        value if value == atoms::hover_border_color() => {
+            let value = color_value(term);
+            let valid = value.is_some();
+            attrs.hover_border_color = value;
+            valid
+        }
+        value if value == atoms::hover_opacity() => {
+            let value = number_value(term);
+            let valid = value.is_some();
+            attrs.hover_opacity = value;
+            valid
+        }
+        value if value == atoms::active_background() => {
+            let value = color_value(term);
+            let valid = value.is_some();
+            attrs.active_background = value;
+            valid
+        }
+        value if value == atoms::active_color() => {
+            let value = color_value(term);
+            let valid = value.is_some();
+            attrs.active_color = value;
+            valid
+        }
+        value if value == atoms::active_border_color() => {
+            let value = color_value(term);
+            let valid = value.is_some();
+            attrs.active_border_color = value;
+            valid
+        }
+        value if value == atoms::active_opacity() => {
+            let value = number_value(term);
+            let valid = value.is_some();
+            attrs.active_opacity = value;
+            valid
+        }
+        value if value == atoms::focus_background() => {
+            let value = color_value(term);
+            let valid = value.is_some();
+            attrs.focus_background = value;
+            valid
+        }
+        value if value == atoms::focus_color() => {
+            let value = color_value(term);
+            let valid = value.is_some();
+            attrs.focus_color = value;
+            valid
+        }
+        value if value == atoms::focus_border_color() => {
+            let value = color_value(term);
+            let valid = value.is_some();
+            attrs.focus_border_color = value;
+            valid
+        }
+        value if value == atoms::focus_opacity() => {
+            let value = number_value(term);
+            let valid = value.is_some();
+            attrs.focus_opacity = value;
+            valid
+        }
+        value if value == atoms::focus_within_background() => {
+            let value = color_value(term);
+            let valid = value.is_some();
+            attrs.focus_within_background = value;
+            valid
+        }
+        value if value == atoms::focus_within_color() => {
+            let value = color_value(term);
+            let valid = value.is_some();
+            attrs.focus_within_color = value;
+            valid
+        }
+        value if value == atoms::focus_within_border_color() => {
+            let value = color_value(term);
+            let valid = value.is_some();
+            attrs.focus_within_border_color = value;
+            valid
+        }
+        value if value == atoms::focus_within_opacity() => {
+            let value = number_value(term);
+            let valid = value.is_some();
+            attrs.focus_within_opacity = value;
+            valid
+        }
+        value if value == atoms::focus_visible_background() => {
+            let value = color_value(term);
+            let valid = value.is_some();
+            attrs.focus_visible_background = value;
+            valid
+        }
+        value if value == atoms::focus_visible_color() => {
+            let value = color_value(term);
+            let valid = value.is_some();
+            attrs.focus_visible_color = value;
+            valid
+        }
+        value if value == atoms::focus_visible_border_color() => {
+            let value = color_value(term);
+            let valid = value.is_some();
+            attrs.focus_visible_border_color = value;
+            valid
+        }
+        value if value == atoms::focus_visible_opacity() => {
+            let value = number_value(term);
+            let valid = value.is_some();
+            attrs.focus_visible_opacity = value;
             valid
         }
         _ => false,
@@ -1561,6 +1928,21 @@ pub(crate) fn apply_generated_render_styles(
     if style.truncate {
         element = element.truncate();
     }
+    if style.underline {
+        element = element.underline();
+    }
+    if style.line_through {
+        element = element.line_through();
+    }
+    match style.font_style.as_deref() {
+        Some("italic") => {
+            element = element.italic();
+        }
+        Some("normal") => {
+            element = element.not_italic();
+        }
+        _ => {}
+    };
     match style.cursor.as_deref() {
         Some("default") => {
             element = element.cursor_default();
@@ -1597,7 +1979,19 @@ pub(crate) fn apply_generated_render_styles(
         }
         _ => {}
     };
+    match style.font_family {
+        Some(value) => {
+            element = element.font_family(gpui::SharedString::from(value));
+        }
+        _ => {}
+    };
     match style.font_weight.as_deref() {
+        Some("thin") => {
+            element = element.font_weight(gpui::FontWeight::THIN);
+        }
+        Some("extra_light") => {
+            element = element.font_weight(gpui::FontWeight::EXTRA_LIGHT);
+        }
         Some("light") => {
             element = element.font_weight(gpui::FontWeight::LIGHT);
         }
@@ -1612,6 +2006,12 @@ pub(crate) fn apply_generated_render_styles(
         }
         Some("bold") => {
             element = element.font_weight(gpui::FontWeight::BOLD);
+        }
+        Some("extra_bold") => {
+            element = element.font_weight(gpui::FontWeight::EXTRA_BOLD);
+        }
+        Some("black") => {
+            element = element.font_weight(gpui::FontWeight::BLACK);
         }
         _ => {}
     };
@@ -1759,15 +2159,90 @@ pub(crate) fn apply_generated_render_styles(
         }
         _ => {}
     };
+    match style.border_top_left_radius {
+        Some(value) => {
+            element = element.rounded_tl(gpui::px(value));
+        }
+        _ => {}
+    };
+    match style.border_top_right_radius {
+        Some(value) => {
+            element = element.rounded_tr(gpui::px(value));
+        }
+        _ => {}
+    };
+    match style.border_bottom_left_radius {
+        Some(value) => {
+            element = element.rounded_bl(gpui::px(value));
+        }
+        _ => {}
+    };
+    match style.border_bottom_right_radius {
+        Some(value) => {
+            element = element.rounded_br(gpui::px(value));
+        }
+        _ => {}
+    };
     match style.border_width {
         Some(value) => {
             element = element.border(gpui::px(value));
         }
         _ => {}
     };
+    match style.border_top_width {
+        Some(value) => {
+            element = element.border_t(gpui::px(value));
+        }
+        _ => {}
+    };
+    match style.border_bottom_width {
+        Some(value) => {
+            element = element.border_b(gpui::px(value));
+        }
+        _ => {}
+    };
+    match style.border_left_width {
+        Some(value) => {
+            element = element.border_l(gpui::px(value));
+        }
+        _ => {}
+    };
+    match style.border_right_width {
+        Some(value) => {
+            element = element.border_r(gpui::px(value));
+        }
+        _ => {}
+    };
+    match style.border_style.as_deref() {
+        Some("dashed") => {
+            element = element.border_dashed();
+        }
+        _ => {}
+    };
     match style.border_color {
         Some(value) => {
             element = element.border_color(gpui::rgba(value));
+        }
+        _ => {}
+    };
+    match style.box_shadow {
+        Some(value) => {
+            element = element
+                .shadow(
+                    value
+                        .into_iter()
+                        .map(|(x, y, blur, spread, color, inset)| {
+                            let shadow = gpui::BoxShadow::new(
+                                    gpui::px(x),
+                                    gpui::px(y),
+                                    gpui::rgba(color).into(),
+                                )
+                                .blur_radius(gpui::px(blur))
+                                .spread_radius(gpui::px(spread));
+                            if inset { shadow.inset() } else { shadow }
+                        })
+                        .collect(),
+                );
         }
         _ => {}
     };
@@ -2113,6 +2588,7 @@ pub(crate) enum ElementNode {
     FrostComponent(FrostComponentNode),
     PaintComponent(PaintComponentNode),
     Image(ImageNode),
+    Svg(SvgNode),
     Text(TextNode),
 }
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -2128,6 +2604,7 @@ pub enum GeneratedElementTag {
     TextSurface,
     TextInput,
     Img,
+    Svg,
     Text,
     UiEdgeFade,
     UiFrost,
@@ -2147,6 +2624,7 @@ pub fn decode_generated_element_tag(tag: &str) -> GeneratedElementTag {
         "text_surface" => GeneratedElementTag::TextSurface,
         "text_input" => GeneratedElementTag::TextInput,
         "img" => GeneratedElementTag::Img,
+        "svg" => GeneratedElementTag::Svg,
         "text" => GeneratedElementTag::Text,
         "ui_edge_fade" => GeneratedElementTag::UiEdgeFade,
         "ui_frost" => GeneratedElementTag::UiFrost,
@@ -2167,6 +2645,7 @@ pub fn generated_component_kind(tag: GeneratedElementTag) -> GeneratedComponentK
         GeneratedElementTag::TextSurface => GeneratedComponentKind::TextSurface,
         GeneratedElementTag::TextInput => GeneratedComponentKind::Input,
         GeneratedElementTag::Img => GeneratedComponentKind::Image,
+        GeneratedElementTag::Svg => GeneratedComponentKind::Svg,
         GeneratedElementTag::Text => GeneratedComponentKind::Text,
         GeneratedElementTag::UiEdgeFade => GeneratedComponentKind::EdgeFadeComponent,
         GeneratedElementTag::UiFrost => GeneratedComponentKind::FrostComponent,
@@ -2187,6 +2666,7 @@ pub(crate) fn decode_generated_element_node<'a>(
         GeneratedComponentKind::TextSurface => decode_text_surface_node(term, tag),
         GeneratedComponentKind::Input => decode_input_node(term, tag),
         GeneratedComponentKind::Image => decode_image_node(term, tag),
+        GeneratedComponentKind::Svg => decode_svg_node(term, tag),
         GeneratedComponentKind::Text => decode_text_node(term, tag),
         GeneratedComponentKind::EdgeFadeComponent => {
             decode_generated_edge_fade_component(term)

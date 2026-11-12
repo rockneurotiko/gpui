@@ -14,6 +14,7 @@ defmodule GPUI.Schema do
   @max_text_surface_lines 64
   @max_block_projections 64
   @max_text_ranges 64
+  @max_svg_bytes 1_048_576
 
   @components GPUI.Schema.Core.components() ++ GPUI.Schema.Surfaces.components()
   @styles [
@@ -180,6 +181,25 @@ defmodule GPUI.Schema do
     },
     %Style{name: :truncate, field: :truncate, type: {:atom_eq, true}, render: :truncate_if_true},
     %Style{
+      name: :underline,
+      field: :underline,
+      type: {:atom_eq, true},
+      render: {:method_if_true, :underline}
+    },
+    %Style{
+      name: :line_through,
+      field: :line_through,
+      type: {:atom_eq, true},
+      render: {:method_if_true, :line_through}
+    },
+    %Style{
+      name: :font_style,
+      field: :font_style,
+      type: :atom_string,
+      render: {:enum_methods, [{"italic", :italic}, {"normal", :not_italic}]}
+    },
+    %Style{name: :text_transform, field: :text_transform, type: :atom_string},
+    %Style{
       name: :cursor,
       field: :cursor,
       type: :atom_string,
@@ -212,17 +232,27 @@ defmodule GPUI.Schema do
       render: {:option_method, :text_size, :px}
     },
     %Style{
+      name: :font_family,
+      field: :font_family,
+      type: :string,
+      render: {:option_method, :font_family, :string}
+    },
+    %Style{
       name: :font_weight,
       field: :font_weight,
       type: :atom_string,
       render:
         {:enum_values, :font_weight,
          [
+           {"thin", [:gpui, :FontWeight, :THIN]},
+           {"extra_light", [:gpui, :FontWeight, :EXTRA_LIGHT]},
            {"light", [:gpui, :FontWeight, :LIGHT]},
            {"normal", [:gpui, :FontWeight, :NORMAL]},
            {"medium", [:gpui, :FontWeight, :MEDIUM]},
            {"semibold", [:gpui, :FontWeight, :SEMIBOLD]},
-           {"bold", [:gpui, :FontWeight, :BOLD]}
+           {"bold", [:gpui, :FontWeight, :BOLD]},
+           {"extra_bold", [:gpui, :FontWeight, :EXTRA_BOLD]},
+           {"black", [:gpui, :FontWeight, :BLACK]}
          ]}
     },
     %Style{
@@ -320,17 +350,99 @@ defmodule GPUI.Schema do
       render: {:option_method, :rounded, :px}
     },
     %Style{
+      name: :border_top_left_radius,
+      field: :border_top_left_radius,
+      type: :radius,
+      render: {:option_method, :rounded_tl, :px}
+    },
+    %Style{
+      name: :border_top_right_radius,
+      field: :border_top_right_radius,
+      type: :radius,
+      render: {:option_method, :rounded_tr, :px}
+    },
+    %Style{
+      name: :border_bottom_left_radius,
+      field: :border_bottom_left_radius,
+      type: :radius,
+      render: {:option_method, :rounded_bl, :px}
+    },
+    %Style{
+      name: :border_bottom_right_radius,
+      field: :border_bottom_right_radius,
+      type: :radius,
+      render: {:option_method, :rounded_br, :px}
+    },
+    %Style{
       name: :border_width,
       field: :border_width,
       type: :px,
       render: {:option_method, :border, :px}
     },
     %Style{
+      name: :border_top_width,
+      field: :border_top_width,
+      type: :px,
+      render: {:option_method, :border_t, :px}
+    },
+    %Style{
+      name: :border_bottom_width,
+      field: :border_bottom_width,
+      type: :px,
+      render: {:option_method, :border_b, :px}
+    },
+    %Style{
+      name: :border_left_width,
+      field: :border_left_width,
+      type: :px,
+      render: {:option_method, :border_l, :px}
+    },
+    %Style{
+      name: :border_right_width,
+      field: :border_right_width,
+      type: :px,
+      render: {:option_method, :border_r, :px}
+    },
+    %Style{
+      name: :border_style,
+      field: :border_style,
+      type: :atom_string,
+      render: {:enum_methods, [{"dashed", :border_dashed}]}
+    },
+    %Style{
       name: :border_color,
       field: :border_color,
       type: :color,
       render: {:option_method, :border_color, :color}
-    }
+    },
+    %Style{name: :box_shadow, field: :box_shadow, type: :shadow_list, render: :shadow_list},
+    # Hover colors are not rendered with the base style: the native container applies
+    # them through its hover state.
+    %Style{name: :hover_background, field: :hover_background, type: :color},
+    %Style{name: :hover_color, field: :hover_color, type: :color},
+    %Style{name: :hover_border_color, field: :hover_border_color, type: :color},
+    %Style{name: :hover_opacity, field: :hover_opacity, type: :number},
+    # Active (pressed) styles follow the same rule and need an element id.
+    %Style{name: :active_background, field: :active_background, type: :color},
+    %Style{name: :active_color, field: :active_color, type: :color},
+    %Style{name: :active_border_color, field: :active_border_color, type: :color},
+    %Style{name: :active_opacity, field: :active_opacity, type: :number},
+    # Focus colors follow the same rule, and only take effect on elements that own a focus
+    # handle (buttons and other focusable controls).
+    %Style{name: :focus_background, field: :focus_background, type: :color},
+    %Style{name: :focus_color, field: :focus_color, type: :color},
+    %Style{name: :focus_border_color, field: :focus_border_color, type: :color},
+    %Style{name: :focus_opacity, field: :focus_opacity, type: :number},
+    %Style{name: :focus_within_background, field: :focus_within_background, type: :color},
+    %Style{name: :focus_within_color, field: :focus_within_color, type: :color},
+    %Style{name: :focus_within_border_color, field: :focus_within_border_color, type: :color},
+    %Style{name: :focus_within_opacity, field: :focus_within_opacity, type: :number},
+    # Focus-visible (keyboard-only focus) replaces the default focus ring and, like focus, only
+    # takes effect on elements that own a focus handle.
+    %Style{name: :focus_visible_background, field: :focus_visible_background, type: :color},
+    %Style{name: :focus_visible_color, field: :focus_visible_color, type: :color},
+    %Style{name: :focus_visible_border_color, field: :focus_visible_border_color, type: :color},
+    %Style{name: :focus_visible_opacity, field: :focus_visible_opacity, type: :number}
   ]
 
   @resources [
@@ -611,6 +723,10 @@ defmodule GPUI.Schema do
 
   defp validate_attr!(_tag, _name, :string, value) when is_binary(value), do: :ok
 
+  defp validate_attr!(_tag, _name, :svg_source, value)
+       when is_binary(value) and value != "" and byte_size(value) <= @max_svg_bytes,
+       do: :ok
+
   defp validate_attr!(_tag, _name, :accessibility_label, value)
        when is_binary(value) and value != "" and byte_size(value) <= 512,
        do: :ok
@@ -846,6 +962,9 @@ defmodule GPUI.Schema do
   defp valid_rgba?(color), do: is_integer(color) and color in 0..0xFFFFFFFF
 
   defp expected_attr_type(:string), do: "a string"
+
+  defp expected_attr_type(:svg_source),
+    do: "a non-empty string of at most #{@max_svg_bytes} bytes"
 
   defp expected_attr_type(:accessibility_label),
     do: "a non-empty string of at most 512 bytes"

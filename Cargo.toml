@@ -12,3 +12,9 @@ async-process = { git = "https://github.com/zed-industries/async-process.git", r
 
 [patch."https://github.com/zed-industries/zed"]
 ztracing = { path = "apps/gpui_native/native/compat/ztracing" }
+
+# gpui_native names its sibling crates by git so it builds from a sparse checkout of its own
+# directory; inside this workspace they resolve to the local sources.
+[patch."https://github.com/rockneurotiko/gpui"]
+gpui_core = { path = "apps/gpui/native" }
+gpui_components = { path = "apps/gpui_components/native" }

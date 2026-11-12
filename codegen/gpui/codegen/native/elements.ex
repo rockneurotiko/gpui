@@ -69,6 +69,12 @@ defmodule GPUI.Codegen.Native.Elements do
           required(:label) => R.option(String.t())
         }
 
+  @type svg_node :: %{
+          required(:source) => String.t(),
+          required(:style) => StyleAttrs.t(),
+          required(:label) => R.option(String.t())
+        }
+
   @type text_node :: %{
           required(:text) => String.t(),
           required(:style) => StyleAttrs.t()
@@ -94,6 +100,7 @@ defmodule GPUI.Codegen.Native.Elements do
           required(:background) => R.option(R.u32()),
           required(:font_weight) => R.option(String.t()),
           required(:font_style) => R.option(String.t()),
+          required(:font_family) => R.option(String.t()),
           required(:underline) => R.option(R.u32()),
           required(:underline_style) => R.option(String.t()),
           required(:strikethrough) => R.option(R.u32()),
@@ -344,6 +351,25 @@ defmodule GPUI.Codegen.Native.Elements do
      )}
   end
 
+  @allow Clippy.redundant_field_names()
+  @spec decode_svg_node(term(), GeneratedElementTag.t()) ::
+          R.nif_result(ElementNode.t())
+  defrust decode_svg_node(term, _tag) do
+    attrs = unwrap!(decode_element_attrs(term))
+    source = decode_as!(attrs.map_get(Atoms.source()), String.t())
+
+    {:ok,
+     enum_variant(
+       ElementNode,
+       :svg,
+       struct_literal(SvgNode,
+         source: source,
+         style: unwrap!(decode_style(term)),
+         label: non_empty_string_attr(term, Atoms.label())
+       )
+     )}
+  end
+
   @spec non_empty_string_attr(term(), atom()) :: R.option(String.t())
   defrustp non_empty_string_attr(term, attr) do
     case string_attr(term, attr) do
@@ -553,6 +579,7 @@ defmodule GPUI.Codegen.Native.Elements do
             :container_node,
             :anchored_layer_node,
             :image_node,
+            :svg_node,
             :text_node,
             :input_node
           ],

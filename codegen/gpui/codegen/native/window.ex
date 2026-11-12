@@ -122,6 +122,15 @@ defmodule GPUI.Codegen.Native.Window do
     set_theme_impl(nif_env(), runtime, mode)
   end
 
+  @nif schedule: :dirty_io
+  @spec load_fonts(
+          R.resource(RuntimeResource.t()),
+          R.vec(term())
+        ) :: R.nif_result(term())
+  defnif load_fonts(runtime, fonts) do
+    load_fonts_impl(nif_env(), runtime, fonts)
+  end
+
   @type root :: %{
           required(:tree) => term()
         }

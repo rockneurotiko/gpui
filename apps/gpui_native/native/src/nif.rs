@@ -435,6 +435,28 @@ pub(crate) fn set_theme_impl<'a>(
     )
 }
 
+#[cfg(feature = "real-gpui")]
+pub(crate) fn load_fonts_impl<'a>(
+    env: Env<'a>,
+    runtime: ResourceArc<RuntimeResource>,
+    fonts: Vec<Term<'a>>,
+) -> NifResult<Term<'a>> {
+    let fonts = fonts
+        .into_iter()
+        .map(|term| {
+            term.decode::<Binary>()
+                .map(|binary| binary.as_slice().to_vec())
+        })
+        .collect::<NifResult<Vec<_>>>()?;
+    let (reply, receiver) = std::sync::mpsc::sync_channel(1);
+    let command = WindowCommand::LoadFonts { fonts, reply };
+
+    encode_command_result(
+        env,
+        execute_window_command(&runtime, command, receiver).map(|()| atoms::ok()),
+    )
+}
+
 fn encode_command_result<T: Encoder>(env: Env, result: Result<T, String>) -> NifResult<Term> {
     match result {
         Ok(value) => Ok((atoms::ok(), value).encode(env)),

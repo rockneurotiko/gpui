@@ -75,6 +75,10 @@ defmodule GPUI.Native.Facade do
         apply(GPUI.Native.Backend.module(), :set_theme, [_runtime, _mode])
       end
 
+      def load_fonts(_runtime, _fonts) do
+        apply(GPUI.Native.Backend.module(), :load_fonts, [_runtime, _fonts])
+      end
+
       def put_resource(_runtime, _resource_id, _resource) do
         apply(GPUI.Native.Backend.module(), :put_resource, [_runtime, _resource_id, _resource])
       end

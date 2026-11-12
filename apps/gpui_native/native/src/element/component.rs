@@ -79,6 +79,20 @@ where
     component
 }
 
+/// Gives an accessibility wrapper the width of the component it wraps, so the
+/// layout slot matches the visible box instead of the parent's width.
+#[cfg(feature = "components")]
+pub(super) fn forward_component_width<T>(mut wrapper: T, style: &crate::StyleAttrs) -> T
+where
+    T: gpui::Styled,
+{
+    let mut refinement = apply_generated_render_styles(gpui::div(), style.clone());
+    if let Some(width) = refinement.style().size.width {
+        wrapper.style().size.width = Some(width);
+    }
+    wrapper
+}
+
 #[cfg_attr(not(feature = "components"), allow(dead_code))]
 #[cfg(not(feature = "components"))]
 pub(super) fn render_component_fallback(

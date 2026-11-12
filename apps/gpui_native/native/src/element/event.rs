@@ -27,7 +27,7 @@ pub(crate) fn attach_accessible_action_target(
         element = element
             .key_context("GPUIAccessibleControl")
             .tab_index(0)
-            .focus_visible(|style| style.border_2().border_color(gpui::rgb(0x60a5fa)))
+            .focus_visible(move |style| focus_visible_style(StateColors::default(), style))
             .on_key_down(move |key, _window, cx| {
                 if matches!(key.keystroke.key.as_str(), "enter" | "space") {
                     emit_click_event(&keyboard_runtime, window_id, &keyboard_event);
@@ -42,6 +42,111 @@ pub(crate) fn attach_accessible_action_target(
     element
 }
 
+/// Colors a container takes on while it is hovered, pressed, focused, keyboard-focused, or contains focus.
+#[cfg(feature = "real-gpui")]
+#[derive(Clone, Copy, Default)]
+pub(crate) struct StateColors {
+    background: Option<u32>,
+    color: Option<u32>,
+    border_color: Option<u32>,
+    opacity: Option<f32>,
+}
+
+#[cfg(feature = "real-gpui")]
+impl StateColors {
+    pub(crate) fn from_style(style: &StyleAttrs) -> Self {
+        Self {
+            background: style.hover_background,
+            color: style.hover_color,
+            border_color: style.hover_border_color,
+            opacity: style.hover_opacity,
+        }
+    }
+
+    pub(crate) fn from_active(style: &StyleAttrs) -> Self {
+        Self {
+            background: style.active_background,
+            color: style.active_color,
+            border_color: style.active_border_color,
+            opacity: style.active_opacity,
+        }
+    }
+
+    pub(crate) fn from_focus(style: &StyleAttrs) -> Self {
+        Self {
+            background: style.focus_background,
+            color: style.focus_color,
+            border_color: style.focus_border_color,
+            opacity: style.focus_opacity,
+        }
+    }
+
+    pub(crate) fn from_focus_within(style: &StyleAttrs) -> Self {
+        Self {
+            background: style.focus_within_background,
+            color: style.focus_within_color,
+            border_color: style.focus_within_border_color,
+            opacity: style.focus_within_opacity,
+        }
+    }
+
+    pub(crate) fn from_focus_visible(style: &StyleAttrs) -> Self {
+        Self {
+            background: style.focus_visible_background,
+            color: style.focus_visible_color,
+            border_color: style.focus_visible_border_color,
+            opacity: style.focus_visible_opacity,
+        }
+    }
+
+    pub(crate) fn is_empty(&self) -> bool {
+        self.background.is_none()
+            && self.color.is_none()
+            && self.border_color.is_none()
+            && self.opacity.is_none()
+    }
+
+    /// Lays these colours over the element's own style, for a state decided while rendering.
+    #[cfg(feature = "real-gpui")]
+    pub(crate) fn refine(self, element: &mut gpui::Div) {
+        use gpui::{Refineable, Styled};
+
+        element
+            .style()
+            .refine(&self.apply(gpui::StyleRefinement::default()));
+    }
+
+    pub(crate) fn apply(self, mut style: gpui::StyleRefinement) -> gpui::StyleRefinement {
+        use gpui::Styled;
+
+        if let Some(value) = self.background {
+            style = style.bg(gpui::rgba(value));
+        }
+        if let Some(value) = self.color {
+            style = style.text_color(gpui::rgba(value));
+        }
+        if let Some(value) = self.border_color {
+            style = style.border_color(gpui::rgba(value));
+        }
+        if let Some(value) = self.opacity {
+            style = style.opacity(value);
+        }
+        style
+    }
+}
+
+/// Keyboard-focus styling: the author's colours, or the default ring when none are set.
+#[cfg(feature = "real-gpui")]
+fn focus_visible_style(colors: StateColors, style: gpui::StyleRefinement) -> gpui::StyleRefinement {
+    use gpui::Styled;
+
+    if colors.is_empty() {
+        style.border_2().border_color(gpui::rgb(0x60a5fa))
+    } else {
+        colors.apply(style)
+    }
+}
+
 #[cfg(feature = "real-gpui")]
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn apply_click_event(
@@ -53,6 +158,11 @@ pub(crate) fn apply_click_event(
     window_id: u64,
     motion: super::ContainerMotion,
     window_control: Option<String>,
+    hover: StateColors,
+    active: StateColors,
+    focus: StateColors,
+    focus_within: StateColors,
+    focus_visible: StateColors,
 ) -> gpui::AnyElement {
     use gpui::{AccessibleAction, InteractiveElement, StatefulInteractiveElement};
 
@@ -63,6 +173,34 @@ pub(crate) fn apply_click_event(
         element_id
     };
     let element = element.debug_selector(|| debug_selector).id(element_id);
+    let element = if hover.is_empty() {
+        element
+    } else {
+        element.hover(move |style| hover.apply(style))
+    };
+    // Pressed styles need the element id set above.
+    let element = if active.is_empty() {
+        element
+    } else {
+        element.active(move |style| active.apply(style))
+    };
+    // Focus styles only apply once the element tracks a focus handle. A container with them
+    // gets one that is not a tab stop, so a wrapper reports the focus of the input inside it.
+    let element = if focus.is_empty() && focus_within.is_empty() {
+        element
+    } else {
+        element.focusable()
+    };
+    let element = if focus.is_empty() {
+        element
+    } else {
+        element.focus(move |style| focus.apply(style))
+    };
+    let element = if focus_within.is_empty() {
+        element
+    } else {
+        element.in_focus(move |style| focus_within.apply(style))
+    };
     let element = super::apply_window_control(element, window_control, runtime.clone(), window_id);
 
     if let Some(event) = event {
@@ -79,7 +217,7 @@ pub(crate) fn apply_click_event(
             element
                 .key_context("GPUIAccessibleControl")
                 .tab_index(0)
-                .focus_visible(|style| style.border_2().border_color(gpui::rgb(0x60a5fa)))
+                .focus_visible(move |style| focus_visible_style(focus_visible, style))
                 .on_key_down(move |key, _window, cx| {
                     if matches!(key.keystroke.key.as_str(), "enter" | "space") {
                         emit_click_event(&keyboard_runtime, window_id, &keyboard_event);

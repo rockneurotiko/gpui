@@ -176,8 +176,9 @@ defmodule GPUI.Session do
                safe_callback(module, :handle_info, [message, assigns], {:noreply, assigns}),
              {:ok, next_state} <-
                apply_view_result(result, message, state, window, module, :handle_info),
-             {:ok, snapshot} <- safe_snapshot(next_state) do
-          {:reply, {:ok, snapshot}, next_state}
+             {:ok, snapshot} <- cached_snapshot(state, next_state) do
+          {:reply, {:ok, snapshot},
+           Map.put(next_state, :snapshot_cache, snapshot_cache(next_state, snapshot))}
         else
           {:error, reason} -> {:reply, {:error, reason}, state}
         end
@@ -254,6 +255,22 @@ defmodule GPUI.Session do
 
     {List.first(matched), remaining}
   end
+
+  # A message that leaves every window and resource as they were (a poll with nothing new)
+  # renders the same tree: reuse the last snapshot instead of rendering again. A view that
+  # depends on anything but its assigns must change an assign for the screen to follow.
+  defp cached_snapshot(state, next_state) do
+    case Map.get(state, :snapshot_cache) do
+      {windows, resources, snapshot}
+      when windows == next_state.windows and resources == next_state.resources ->
+        {:ok, snapshot}
+
+      _ ->
+        safe_snapshot(next_state)
+    end
+  end
+
+  defp snapshot_cache(state, snapshot), do: {state.windows, state.resources, snapshot}
 
   defp safe_snapshot(state) do
     {:ok, snapshot_from_state(state)}

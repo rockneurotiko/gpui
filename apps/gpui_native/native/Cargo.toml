@@ -20,8 +20,8 @@ gpui-component-host = ["components"]
 native-test = ["gpui-component-host", "zed_gpui/test-support"]
 
 [dependencies]
-gpui_core = { path = "../../gpui/native" }
-gpui_components = { path = "../../gpui_components/native", optional = true }
+gpui_core = { git = "https://github.com/rockneurotiko/gpui", branch = "hover-styles" }
+gpui_components = { git = "https://github.com/rockneurotiko/gpui", branch = "hover-styles", optional = true }
 rustler = "0.38.0"
 # gpui-component uses the unqualified Zed source. Keep these source IDs identical
 # and pin the shared revision through Cargo.lock so all GPUI types are unified.

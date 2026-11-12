@@ -4,6 +4,16 @@ defmodule GPUI.Display.Native do
 
   A display owns one native runtime namespace while sharing the process-global
   GPUI application loop with other native displays.
+
+  ## Options
+
+    * `:theme` - initial component theme, `:light` or `:dark`.
+    * `:fonts` - font files (`.ttf`, `.otf`, `.ttc`) or directories of them,
+      added to the text system at start so bundled families resolve without
+      being installed. Select them with the `font_family` style. Family names must match an
+      installed or `fonts:`-loaded family exactly; there is no generic-family
+      resolution (`"monospace"`, `"serif"`, ...). The text
+      system is process-global; fonts with identical contents are added once.
   """
 
   use GenServer
@@ -83,7 +93,8 @@ defmodule GPUI.Display.Native do
     with :ok <- native_compiled(),
          :ok <- initialize_identity(identity),
          {:ok, runtime} <- GPUI.Native.Backend.start_runtime(),
-         :ok <- initialize_theme(runtime, Keyword.get(opts, :theme)) do
+         :ok <- initialize_theme(runtime, Keyword.get(opts, :theme)),
+         :ok <- initialize_fonts(runtime, Keyword.get(opts, :fonts, [])) do
       {:ok, %{runtime: runtime, windows: %{}, resources: %{}}}
     else
       {:error, reason} -> {:stop, reason}
@@ -190,6 +201,38 @@ defmodule GPUI.Display.Native do
       {:error, reason} ->
         {:error, {:application_identity_failed, reason}}
     end
+  end
+
+  defp initialize_fonts(_runtime, []), do: :ok
+
+  defp initialize_fonts(runtime, paths) when is_list(paths) do
+    with {:ok, data} <- read_fonts(paths),
+         {:ok, _} <- GPUI.Native.Backend.load_fonts(runtime, data) do
+      :ok
+    else
+      {:error, reason} -> {:error, {:fonts_failed, reason}}
+    end
+  end
+
+  defp initialize_fonts(_runtime, other), do: {:error, {:invalid_fonts, other}}
+
+  defp read_fonts(paths) do
+    paths
+    |> Enum.flat_map(fn path ->
+      if File.dir?(path),
+        do: Path.wildcard(Path.join(path, "*.{ttf,otf,ttc,TTF,OTF,TTC}")),
+        else: [path]
+    end)
+    |> Enum.reduce_while({:ok, []}, fn file, {:ok, acc} ->
+      case File.read(file) do
+        {:ok, bytes} -> {:cont, {:ok, [bytes | acc]}}
+        {:error, reason} -> {:halt, {:error, {file, reason}}}
+      end
+    end)
+    |> then(fn
+      {:ok, data} -> {:ok, Enum.reverse(data)}
+      error -> error
+    end)
   end
 
   defp initialize_theme(_runtime, nil), do: :ok

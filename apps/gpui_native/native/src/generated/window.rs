@@ -170,6 +170,15 @@ fn set_theme<'a>(
 ) -> NifResult<Term<'a>> {
     set_theme_impl(env, runtime, mode)
 }
+#[rustler::nif(schedule = "DirtyIo")]
+#[allow(unused_variables)]
+fn load_fonts<'a>(
+    env: Env<'a>,
+    runtime: ResourceArc<RuntimeResource>,
+    fonts: Vec<Term<'a>>,
+) -> NifResult<Term<'a>> {
+    load_fonts_impl(env, runtime, fonts)
+}
 fn decode_update<'a>(request: UpdateRequest<'a>) -> NifResult<(u64, ElementNode)> {
     match decode_element_node(request.tree) {
         Ok(tree) => Ok((request.window_id, tree)),
