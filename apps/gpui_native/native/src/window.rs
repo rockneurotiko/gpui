@@ -269,6 +269,7 @@ impl gpui::Render for ElixirRoot {
         let mut active_input_ids = HashSet::new();
         #[cfg(feature = "components")]
         self.components.begin_render();
+        crate::element::scroll::begin_frame(self.window_id);
         let element = tree.render(&mut ElementRenderContext {
             runtime: self.runtime.clone(),
             window_id: self.window_id,
@@ -281,6 +282,7 @@ impl gpui::Render for ElixirRoot {
             window: _window,
             cx,
         });
+        crate::element::scroll::end_frame(self.window_id);
         self.input_entities
             .retain(|input_id, _entity| active_input_ids.contains(input_id));
         #[cfg(feature = "components")]
@@ -569,6 +571,7 @@ fn handle_window_command(
             let key = (runtime_id, window_id);
             if let Some(window) = windows.remove(&key) {
                 let _ = close_managed_window(window, cx);
+                crate::element::scroll::drop_window(window_id);
             }
 
             let result = open_gpui_window(
@@ -777,6 +780,7 @@ fn handle_platform_window_closed(
 
     if let Some(key) = key {
         if let Some(window) = windows.remove(&key) {
+            crate::element::scroll::drop_window(key.1);
             let _ = push_event(
                 &window.runtime,
                 NativeEvent::WindowClosed { window_id: key.1 },
@@ -897,6 +901,7 @@ fn close_gpui_window(
         .remove(&key)
         .ok_or_else(|| "unknown_window".to_string())?;
     let runtime = window.runtime.clone();
+    crate::element::scroll::drop_window(key.1);
     close_managed_window(window, cx)?;
     push_event(&runtime, NativeEvent::WindowClosed { window_id: key.1 })
         .map_err(|_error| "runtime_lock_failed".to_string())

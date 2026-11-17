@@ -28,6 +28,7 @@ pub(crate) fn render_button_component(
         .filter(|prompt| !prompt.is_empty())
         .unwrap_or_else(|| "Choose a file".to_string());
     let file_max_bytes = node.file_max_bytes.min(25 * 1_024 * 1_024) as usize;
+    let target_id = node.id.clone();
     let mut button = Button::new(node.id);
 
     button = match node.variant.as_deref() {
@@ -121,7 +122,10 @@ pub(crate) fn render_button_component(
         });
     }
 
-    apply_component_styles(button, node.style).into_any_element()
+    test_target(
+        apply_component_styles(button, node.style).into_any_element(),
+        target_id,
+    )
 }
 
 #[cfg(feature = "components")]
@@ -135,6 +139,7 @@ pub(crate) fn render_checkbox_component(
 
     let runtime = context.runtime.clone();
     let window_id = context.window_id;
+    let target_id = node.id.clone();
     let mut checkbox = Checkbox::new(node.id)
         .checked(node.checked)
         .disabled(node.disabled);
@@ -164,7 +169,29 @@ pub(crate) fn render_checkbox_component(
         });
     }
 
-    apply_component_styles(checkbox, node.style).into_any_element()
+    test_target(
+        apply_component_styles(checkbox, node.style).into_any_element(),
+        target_id,
+    )
+}
+
+/// gpui-component widgets expose no test selector of their own, so the native test harness
+/// wraps them in a box that hugs the widget and carries the element ID. Release builds
+/// render the widget unwrapped.
+#[cfg(all(feature = "components", feature = "native-test"))]
+fn test_target(element: gpui::AnyElement, id: String) -> gpui::AnyElement {
+    use gpui::{InteractiveElement, IntoElement, ParentElement, Styled};
+
+    gpui::div()
+        .debug_selector(|| id)
+        .self_start()
+        .child(element)
+        .into_any_element()
+}
+
+#[cfg(all(feature = "components", not(feature = "native-test")))]
+fn test_target(element: gpui::AnyElement, _id: String) -> gpui::AnyElement {
+    element
 }
 
 #[cfg(not(feature = "components"))]

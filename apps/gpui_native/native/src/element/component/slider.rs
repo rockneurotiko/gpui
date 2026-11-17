@@ -43,6 +43,7 @@ pub(crate) fn render(
         .expect("component slider should exist");
     let element = gpui_components::slider::render(&owner, slider, context.window, context.cx);
     gpui::div()
+        .debug_selector(|| accessibility_id.clone())
         .id(format!("slider-accessibility-{accessibility_id}"))
         .role(gpui::Role::Group)
         .aria_label(label)
