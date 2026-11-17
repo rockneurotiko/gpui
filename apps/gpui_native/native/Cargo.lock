@@ -2428,7 +2428,7 @@ dependencies = [
 [[package]]
 name = "gpui_components"
 version = "0.2.0"
-source = "git+https://github.com/rockneurotiko/gpui?branch=hover-styles#ed4ddd39809fde8031b970b4fe6c397e3b56f472"
+source = "git+https://github.com/rockneurotiko/gpui?branch=hover-styles#f9dc1bf2e09f9bf4f437e0bbda4e9cfd6a425529"
 dependencies = [
  "gpui",
  "gpui-component",
@@ -2438,7 +2438,7 @@ dependencies = [
 [[package]]
 name = "gpui_core"
 version = "0.2.0"
-source = "git+https://github.com/rockneurotiko/gpui?branch=hover-styles#ed4ddd39809fde8031b970b4fe6c397e3b56f472"
+source = "git+https://github.com/rockneurotiko/gpui?branch=hover-styles#f9dc1bf2e09f9bf4f437e0bbda4e9cfd6a425529"
 dependencies = [
  "gpui",
  "image",
