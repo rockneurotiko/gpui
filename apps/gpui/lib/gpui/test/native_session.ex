@@ -61,6 +61,12 @@ defmodule GPUI.Test.NativeSession do
   @spec type(UI.t(), String.t()) :: UI.t()
   def type(%UI{} = ui, text), do: call(ui, {:type, text!(text)})
 
+  @spec write_clipboard(UI.t(), String.t()) :: UI.t()
+  def write_clipboard(%UI{} = ui, text), do: call(ui, {:write_clipboard, text!(text)})
+
+  @spec read_clipboard(UI.t()) :: String.t()
+  def read_clipboard(%UI{} = ui), do: call(ui, {:read_clipboard})
+
   @spec resize(UI.t(), {number(), number()}) :: UI.t()
   def resize(%UI{} = ui, size), do: call(ui, {:resize, size!(size)})
 
@@ -129,6 +135,16 @@ defmodule GPUI.Test.NativeSession do
 
   def handle_call({:type, ref, text}, _from, %{ref: ref} = state),
     do: reply(state, :type, text, NativeTest.input(state.session, text))
+
+  def handle_call({:write_clipboard, ref, text}, _from, %{ref: ref} = state),
+    do: reply(state, :write_clipboard, text, NativeTest.write_clipboard(state.session, text))
+
+  def handle_call({:read_clipboard, ref}, _from, %{ref: ref} = state) do
+    case native_result(state, :read_clipboard, nil, NativeTest.read_clipboard(state.session)) do
+      {:ok, text} -> {:reply, text, state}
+      {:error, error} -> {:reply, {:error, error}, state}
+    end
+  end
 
   def handle_call({:resize, ref, {width, height}}, _from, %{ref: ref} = state)
       when is_number(width) and is_number(height) and width > 0 and height > 0,

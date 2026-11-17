@@ -67,6 +67,9 @@ defmodule GPUI.Native.Backend do
   @doc "Scrolls the native scroll containers with this element ID back to the top."
   def scroll_to_top(element_id), do: call(:scroll_to_top, [element_id])
 
+  @doc "Writes text to the native system clipboard."
+  def write_clipboard(text), do: call(:write_clipboard, [text])
+
   @doc "Starts one native runtime namespace."
   def start_runtime, do: call(:start_runtime, [])
 
@@ -148,6 +151,13 @@ defmodule GPUI.Native.Backend do
   @doc "Scrolls a target back to its top in a deterministic native-test session."
   def native_test_scroll_to_top(session, target),
     do: call(:native_test_scroll_to_top, [session, target])
+
+  @doc "Writes text to the clipboard of a deterministic native-test session."
+  def native_test_write_clipboard(session, text),
+    do: call(:native_test_write_clipboard, [session, text])
+
+  @doc "Reads the clipboard text of a deterministic native-test session."
+  def native_test_read_clipboard(session), do: call(:native_test_read_clipboard, [session])
 
   @doc "Types text into the focused deterministic native-test control."
   def native_test_input(session, text), do: call(:native_test_input, [session, text])

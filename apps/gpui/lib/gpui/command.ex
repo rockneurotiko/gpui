@@ -52,6 +52,19 @@ defmodule GPUI.Command do
     end
   end
 
+  @doc """
+  Writes text to the system clipboard.
+
+  Returns an error when the native runtime is not running or does not answer.
+  """
+  @spec write_clipboard(String.t()) :: :ok | {:error, term()}
+  def write_clipboard(text) when is_binary(text) do
+    case GPUI.Native.Backend.write_clipboard(text) do
+      {:ok, _result} -> :ok
+      {:error, _reason} = error -> error
+    end
+  end
+
   @doc "Converts a command into its renderer-independent protocol tuple."
   @spec to_payload(t()) :: {String.t(), String.t()}
   def to_payload(%__MODULE__{} = command), do: {command.id, command.shortcut}

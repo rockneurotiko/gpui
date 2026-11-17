@@ -190,6 +190,15 @@ defmodule GPUI.Test do
   def scroll_to_top(%GPUI.Test.UI{} = ui, target),
     do: GPUI.Test.NativeSession.scroll_to_top(ui, target)
 
+  @doc "Writes text to the session's clipboard, as `GPUI.Command.write_clipboard/1` does."
+  @spec write_clipboard(GPUI.Test.UI.t(), String.t()) :: GPUI.Test.UI.t()
+  def write_clipboard(%GPUI.Test.UI{} = ui, text),
+    do: GPUI.Test.NativeSession.write_clipboard(ui, text)
+
+  @doc "Returns the session clipboard text, or an empty string when it holds none."
+  @spec read_clipboard(GPUI.Test.UI.t()) :: String.t()
+  def read_clipboard(%GPUI.Test.UI{} = ui), do: GPUI.Test.NativeSession.read_clipboard(ui)
+
   @doc "Resizes the deterministic native viewport."
   @spec resize(GPUI.Test.UI.t(), {number(), number()}) :: GPUI.Test.UI.t()
   def resize(%GPUI.Test.UI{} = ui, size), do: GPUI.Test.NativeSession.resize(ui, size)

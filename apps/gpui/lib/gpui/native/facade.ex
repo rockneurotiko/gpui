@@ -38,6 +38,10 @@ defmodule GPUI.Native.Facade do
         apply(GPUI.Native.Backend.module(), :scroll_to_top, [_element_id])
       end
 
+      def write_clipboard(_text) do
+        apply(GPUI.Native.Backend.module(), :write_clipboard, [_text])
+      end
+
       def start_runtime() do
         apply(GPUI.Native.Backend.module(), :start_runtime, [])
       end
@@ -161,6 +165,14 @@ defmodule GPUI.Native.Facade do
 
       def native_test_scroll_to_top(_session, _target) do
         apply(GPUI.Native.Backend.module(), :native_test_scroll_to_top, [_session, _target])
+      end
+
+      def native_test_write_clipboard(_session, _text) do
+        apply(GPUI.Native.Backend.module(), :native_test_write_clipboard, [_session, _text])
+      end
+
+      def native_test_read_clipboard(_session) do
+        apply(GPUI.Native.Backend.module(), :native_test_read_clipboard, [_session])
       end
 
       def native_test_input(_session, _text) do

@@ -185,6 +185,38 @@ defmodule GPUI.Codegen.Native.TestOperations do
     {:ok, {Atoms.error(), "native_test_disabled"}.encode(env)}
   end
 
+  @spec native_test_write_clipboard_impl(
+          Env.t(R.lifetime(:a)),
+          R.resource(NativeTest.NativeTestSessionResource.t()),
+          String.t()
+        ) :: R.nif_result(term())
+  @cfg feature: "native-test"
+  defrust native_test_write_clipboard_impl(env, session, text) do
+    encode_unit_result(env, write_clipboard(ref(session), text))
+  end
+
+  @cfg not: [feature: "native-test"]
+  defrust native_test_write_clipboard_impl(env, _session, _text) do
+    {:ok, {Atoms.error(), "native_test_disabled"}.encode(env)}
+  end
+
+  @spec native_test_read_clipboard_impl(
+          Env.t(R.lifetime(:a)),
+          R.resource(NativeTest.NativeTestSessionResource.t())
+        ) :: R.nif_result(term())
+  @cfg feature: "native-test"
+  defrust native_test_read_clipboard_impl(env, session) do
+    case read_clipboard(ref(session)) do
+      {:ok, text} -> {:ok, {Atoms.ok(), text}.encode(env)}
+      {:error, reason} -> {:ok, {Atoms.error(), reason}.encode(env)}
+    end
+  end
+
+  @cfg not: [feature: "native-test"]
+  defrust native_test_read_clipboard_impl(env, _session) do
+    {:ok, {Atoms.error(), "native_test_disabled"}.encode(env)}
+  end
+
   @spec native_test_resize_impl(
           Env.t(R.lifetime(:a)),
           R.resource(NativeTest.NativeTestSessionResource.t()),

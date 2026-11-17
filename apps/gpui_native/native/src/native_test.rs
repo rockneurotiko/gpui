@@ -51,6 +51,13 @@ enum TestCommand {
         element_id: String,
         reply: TestCommandReply<()>,
     },
+    WriteClipboard {
+        text: String,
+        reply: TestCommandReply<()>,
+    },
+    ReadClipboard {
+        reply: TestCommandReply<String>,
+    },
     Input {
         text: String,
         reply: TestCommandReply<()>,
@@ -386,6 +393,19 @@ fn handle_non_stop_command(session: &mut TestSession, command: TestCommand) {
             });
             let _ = reply.send(result);
         }
+        TestCommand::WriteClipboard { text, reply } => {
+            session
+                .context
+                .update(|_window, cx| cx.write_to_clipboard(gpui::ClipboardItem::new_string(text)));
+            let _ = reply.send(Ok(()));
+        }
+        TestCommand::ReadClipboard { reply } => {
+            // GPUI reads an empty clipboard item as no text, so both come back as "".
+            let text = session
+                .context
+                .update(|_window, cx| cx.read_from_clipboard().and_then(|item| item.text()));
+            let _ = reply.send(Ok(text.unwrap_or_default()));
+        }
         TestCommand::Input { text, reply } => {
             session.context.simulate_input(&text);
             let _ = reply.send(Ok(()));
@@ -549,6 +569,21 @@ pub(crate) fn scroll_to_top(
         element_id,
         reply,
     })
+}
+
+#[cfg(feature = "native-test")]
+pub(crate) fn write_clipboard(
+    session: &rustler::ResourceArc<NativeTestSessionResource>,
+    text: String,
+) -> Result<(), String> {
+    execute(session, |reply| TestCommand::WriteClipboard { text, reply })
+}
+
+#[cfg(feature = "native-test")]
+pub(crate) fn read_clipboard(
+    session: &rustler::ResourceArc<NativeTestSessionResource>,
+) -> Result<String, String> {
+    execute(session, |reply| TestCommand::ReadClipboard { reply })
 }
 
 #[cfg(feature = "native-test")]

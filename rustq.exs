@@ -258,6 +258,8 @@ generate "native-stubs", "apps/gpui/lib/gpui/native/generated.ex" do
           set_app_identity:
             MetaAST.function!(GPUI.Codegen.Native.RuntimeBoundary, :set_app_identity),
           scroll_to_top: MetaAST.function!(GPUI.Codegen.Native.RuntimeBoundary, :scroll_to_top),
+          write_clipboard:
+            MetaAST.function!(GPUI.Codegen.Native.RuntimeBoundary, :write_clipboard),
           start_runtime: MetaAST.function!(GPUI.Codegen.Native.RuntimeBoundary, :start_runtime),
           stop_runtime: MetaAST.function!(GPUI.Codegen.Native.RuntimeBoundary, :stop_runtime),
           open_window: MetaAST.function!(GPUI.Codegen.Native.Window, :open_window),
@@ -291,6 +293,10 @@ generate "native-stubs", "apps/gpui/lib/gpui/native/generated.ex" do
             MetaAST.function!(GPUI.Codegen.Native.TestBoundary, :native_test_scroll),
           native_test_scroll_to_top:
             MetaAST.function!(GPUI.Codegen.Native.TestBoundary, :native_test_scroll_to_top),
+          native_test_write_clipboard:
+            MetaAST.function!(GPUI.Codegen.Native.TestBoundary, :native_test_write_clipboard),
+          native_test_read_clipboard:
+            MetaAST.function!(GPUI.Codegen.Native.TestBoundary, :native_test_read_clipboard),
           native_test_input:
             MetaAST.function!(GPUI.Codegen.Native.TestBoundary, :native_test_input),
           native_test_key: MetaAST.function!(GPUI.Codegen.Native.TestBoundary, :native_test_key),

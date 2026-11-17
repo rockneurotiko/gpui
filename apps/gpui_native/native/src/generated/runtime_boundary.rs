@@ -21,6 +21,11 @@ fn scroll_to_top<'a>(env: Env<'a>, element_id: String) -> NifResult<Term<'a>> {
 }
 #[rustler::nif(schedule = "DirtyIo")]
 #[allow(unused_variables)]
+fn write_clipboard<'a>(env: Env<'a>, text: String) -> NifResult<Term<'a>> {
+    write_clipboard_impl(env, text)
+}
+#[rustler::nif(schedule = "DirtyIo")]
+#[allow(unused_variables)]
 fn start_runtime<'a>(env: Env<'a>) -> NifResult<Term<'a>> {
     start_runtime_impl(env)
 }

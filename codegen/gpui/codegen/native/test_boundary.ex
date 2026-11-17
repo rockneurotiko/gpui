@@ -187,6 +187,22 @@ defmodule GPUI.Codegen.Native.TestBoundary do
   end
 
   @nif schedule: :dirty_io
+  @spec native_test_write_clipboard(
+          R.resource(NativeTest.NativeTestSessionResource.t()),
+          String.t()
+        ) :: R.nif_result(term())
+  defnif native_test_write_clipboard(session, text) do
+    native_test_write_clipboard_impl(nif_env(), session, text)
+  end
+
+  @nif schedule: :dirty_io
+  @spec native_test_read_clipboard(R.resource(NativeTest.NativeTestSessionResource.t())) ::
+          R.nif_result(term())
+  defnif native_test_read_clipboard(session) do
+    native_test_read_clipboard_impl(nif_env(), session)
+  end
+
+  @nif schedule: :dirty_io
   @spec native_test_input(
           R.resource(NativeTest.NativeTestSessionResource.t()),
           String.t()

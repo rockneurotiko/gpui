@@ -198,6 +198,23 @@ fn native_test_scroll_to_top<'a>(
 }
 #[rustler::nif(schedule = "DirtyIo")]
 #[allow(unused_variables)]
+fn native_test_write_clipboard<'a>(
+    env: Env<'a>,
+    session: ResourceArc<native_test::NativeTestSessionResource>,
+    text: String,
+) -> NifResult<Term<'a>> {
+    native_test_write_clipboard_impl(env, session, text)
+}
+#[rustler::nif(schedule = "DirtyIo")]
+#[allow(unused_variables)]
+fn native_test_read_clipboard<'a>(
+    env: Env<'a>,
+    session: ResourceArc<native_test::NativeTestSessionResource>,
+) -> NifResult<Term<'a>> {
+    native_test_read_clipboard_impl(env, session)
+}
+#[rustler::nif(schedule = "DirtyIo")]
+#[allow(unused_variables)]
 fn native_test_input<'a>(
     env: Env<'a>,
     session: ResourceArc<native_test::NativeTestSessionResource>,

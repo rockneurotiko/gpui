@@ -57,6 +57,20 @@ defmodule GPUI.Native.TestDriver do
   )
 
   (
+    @doc "Writes text to the clipboard of a deterministic native-test session."
+    def write_clipboard(id, text) do
+      GPUI.Native.Backend.native_test_write_clipboard(id, text)
+    end
+  )
+
+  (
+    @doc "Reads the clipboard text of a deterministic native-test session."
+    def read_clipboard(id) do
+      GPUI.Native.Backend.native_test_read_clipboard(id)
+    end
+  )
+
+  (
     @doc "Types text into a deterministic native-test session."
     def input(id, text) do
       GPUI.Native.Backend.native_test_input(id, text)

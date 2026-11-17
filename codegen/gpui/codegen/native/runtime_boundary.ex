@@ -23,6 +23,12 @@ defmodule GPUI.Codegen.Native.RuntimeBoundary do
   end
 
   @nif schedule: :dirty_io
+  @spec write_clipboard(String.t()) :: R.nif_result(term())
+  defnif write_clipboard(text) do
+    write_clipboard_impl(nif_env(), text)
+  end
+
+  @nif schedule: :dirty_io
   @spec start_runtime() :: R.nif_result(term())
   defnif(start_runtime(), do: start_runtime_impl(nif_env()))
 

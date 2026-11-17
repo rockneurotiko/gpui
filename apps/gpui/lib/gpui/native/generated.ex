@@ -38,6 +38,10 @@ defmodule GPUI.Native.Generated do
         :erlang.nif_error(:nif_not_loaded)
       end
 
+      def write_clipboard(_text) do
+        :erlang.nif_error(:nif_not_loaded)
+      end
+
       def start_runtime do
         :erlang.nif_error(:nif_not_loaded)
       end
@@ -131,6 +135,14 @@ defmodule GPUI.Native.Generated do
       end
 
       def native_test_scroll_to_top(_session, _target) do
+        :erlang.nif_error(:nif_not_loaded)
+      end
+
+      def native_test_write_clipboard(_session, _text) do
+        :erlang.nif_error(:nif_not_loaded)
+      end
+
+      def native_test_read_clipboard(_session) do
         :erlang.nif_error(:nif_not_loaded)
       end
 

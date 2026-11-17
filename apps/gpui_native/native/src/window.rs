@@ -475,6 +475,10 @@ pub(crate) enum WindowCommand {
     ScrollToTop {
         element_id: String,
     },
+    WriteClipboard {
+        text: String,
+        reply: WindowCommandReply,
+    },
     SetTheme {
         mode: NativeThemeMode,
         reply: WindowCommandReply,
@@ -674,6 +678,10 @@ fn handle_window_command(
         WindowCommand::ScrollToTop { element_id } => {
             crate::element::scroll::scroll_to_top(&element_id);
             cx.refresh_windows();
+        }
+        WindowCommand::WriteClipboard { text, reply } => {
+            cx.write_to_clipboard(gpui::ClipboardItem::new_string(text));
+            send_reply(reply, Ok(()));
         }
         WindowCommand::SetTheme { mode, reply } => {
             let result = set_component_theme(mode, windows, cx);
