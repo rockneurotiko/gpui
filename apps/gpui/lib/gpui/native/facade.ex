@@ -34,6 +34,10 @@ defmodule GPUI.Native.Facade do
         apply(GPUI.Native.Backend.module(), :set_app_identity, [_identifier, _name])
       end
 
+      def scroll_to_top(_element_id) do
+        apply(GPUI.Native.Backend.module(), :scroll_to_top, [_element_id])
+      end
+
       def start_runtime() do
         apply(GPUI.Native.Backend.module(), :start_runtime, [])
       end
@@ -153,6 +157,10 @@ defmodule GPUI.Native.Facade do
           _delta_x,
           _delta_y
         ])
+      end
+
+      def native_test_scroll_to_top(_session, _target) do
+        apply(GPUI.Native.Backend.module(), :native_test_scroll_to_top, [_session, _target])
       end
 
       def native_test_input(_session, _text) do

@@ -55,6 +55,9 @@ defmodule GPUI.Test.NativeSession do
   def scroll(%UI{} = ui, target, opts),
     do: call(ui, {:scroll, target!(target), scroll_opts!(opts)})
 
+  @spec scroll_to_top(UI.t(), String.t()) :: UI.t()
+  def scroll_to_top(%UI{} = ui, target), do: call(ui, {:scroll_to_top, target!(target)})
+
   @spec type(UI.t(), String.t()) :: UI.t()
   def type(%UI{} = ui, text), do: call(ui, {:type, text!(text)})
 
@@ -120,6 +123,9 @@ defmodule GPUI.Test.NativeSession do
       NativeTest.scroll(state.session, target, delta_x, delta_y)
     )
   end
+
+  def handle_call({:scroll_to_top, ref, target}, _from, %{ref: ref} = state),
+    do: reply(state, :scroll_to_top, target, NativeTest.scroll_to_top(state.session, target))
 
   def handle_call({:type, ref, text}, _from, %{ref: ref} = state),
     do: reply(state, :type, text, NativeTest.input(state.session, text))

@@ -95,6 +95,17 @@ defmodule GPUI.Codegen.Native.Events do
     do: encode_value_event(env, Atoms.bounds(), window_id, event, value.encode(env))
   )
 
+  @spec encode_scroll_event(
+          Env.t(R.lifetime(:a)),
+          R.u64(),
+          String.t(),
+          R.f64()
+        ) :: R.nif_result(Term.t(R.lifetime(:a)))
+  defrust encode_scroll_event(env, window_id, event, offset_y) do
+    value = encode_event_map(env, [{Atoms.offset_y(), offset_y.encode(env)}])
+    encode_value_event(env, Atoms.scroll(), window_id, event, value)
+  end
+
   @spec encode_clipboard_event(
           Env.t(R.lifetime(:a)),
           R.u64(),
@@ -445,6 +456,7 @@ defmodule GPUI.Codegen.Native.Events do
 
     real_gpui_only = [
       :encode_bounds_event,
+      :encode_scroll_event,
       :encode_focus_event,
       :encode_missing_resource_event
     ]

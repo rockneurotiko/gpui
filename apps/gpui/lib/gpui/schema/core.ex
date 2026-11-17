@@ -291,7 +291,7 @@ defmodule GPUI.Schema.Core do
         motion_from_y: {:default, :number, 0.0}
       ],
       children: false,
-      events: [click: :"phx-click", bounds: :"phx-bounds-change"],
+      events: [click: :"phx-click", bounds: :"phx-bounds-change", scroll: :"phx-scroll"],
       extension: nil,
       kind: :container,
       public_hidden_attrs: [],

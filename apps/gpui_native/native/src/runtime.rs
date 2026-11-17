@@ -125,6 +125,15 @@ impl Drop for RuntimeResource {
     }
 }
 
+/// The running GPUI loop's command channel, without starting one.
+#[cfg(feature = "real-gpui")]
+pub(crate) fn running_command_sender() -> Option<mpsc::UnboundedSender<WindowCommand>> {
+    GPUI_COMMANDS
+        .get()
+        .filter(|sender| !sender.is_closed())
+        .cloned()
+}
+
 #[cfg(feature = "real-gpui")]
 pub(crate) fn gpui_command_sender() -> Result<mpsc::UnboundedSender<WindowCommand>, &'static str> {
     if let Some(sender) = GPUI_COMMANDS.get() {

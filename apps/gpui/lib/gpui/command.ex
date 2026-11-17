@@ -39,6 +39,19 @@ defmodule GPUI.Command do
     raise ArgumentError, "window commands must be a list; got: #{inspect(commands)}"
   end
 
+  @doc """
+  Scrolls every `:scroll` container with this element ID back to the top.
+
+  An ID that matches no scroll container is ignored.
+  """
+  @spec scroll_to_top(String.t()) :: :ok | {:error, term()}
+  def scroll_to_top(element_id) when is_binary(element_id) and element_id != "" do
+    case GPUI.Native.Backend.scroll_to_top(element_id) do
+      {:ok, _result} -> :ok
+      {:error, _reason} = error -> error
+    end
+  end
+
   @doc "Converts a command into its renderer-independent protocol tuple."
   @spec to_payload(t()) :: {String.t(), String.t()}
   def to_payload(%__MODULE__{} = command), do: {command.id, command.shortcut}

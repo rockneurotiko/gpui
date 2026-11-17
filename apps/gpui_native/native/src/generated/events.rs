@@ -28,6 +28,7 @@ pub(crate) enum InputKind {
     Bounds,
     Focus,
     Blur,
+    Scroll,
     Transaction,
     Submit,
     Selection,
@@ -60,6 +61,7 @@ impl InputKind {
             Self::Bounds => atoms::bounds(),
             Self::Focus => atoms::focus(),
             Self::Blur => atoms::blur(),
+            Self::Scroll => atoms::scroll(),
             Self::Transaction => atoms::transaction(),
             Self::Submit => atoms::submit(),
             Self::Selection => atoms::selection(),
@@ -220,6 +222,16 @@ pub(crate) fn encode_bounds_event<'a>(
     value: ElementBoundsGeometry,
 ) -> NifResult<Term<'a>> {
     encode_value_event(env, atoms::bounds(), window_id, event, value.encode(env))
+}
+#[cfg(feature = "real-gpui")]
+pub(crate) fn encode_scroll_event<'a>(
+    env: Env<'a>,
+    window_id: u64,
+    event: String,
+    offset_y: f64,
+) -> NifResult<Term<'a>> {
+    let value = encode_event_map(env, vec![(atoms::offset_y(), offset_y.encode(env))])?;
+    encode_value_event(env, atoms::scroll(), window_id, event, value)
 }
 #[cfg(feature = "real-gpui")]
 pub(crate) fn encode_focus_event<'a>(

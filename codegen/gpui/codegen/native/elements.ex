@@ -35,6 +35,7 @@ defmodule GPUI.Codegen.Native.Elements do
           required(:children) => R.vec(ElementNode.t()),
           required(:click) => R.option(String.t()),
           required(:bounds_change) => R.option(String.t()),
+          required(:scroll) => R.option(String.t()),
           required(:focus_request) => R.u64(),
           required(:focus) => R.option(String.t()),
           required(:blur) => R.option(String.t()),
@@ -264,6 +265,7 @@ defmodule GPUI.Codegen.Native.Elements do
          children: unwrap!(decode_children(term)),
          click: string_attr(term, Atoms.phx_click()),
          bounds_change: string_attr(term, Atoms.phx_bounds_change()),
+         scroll: string_attr(term, Atoms.phx_scroll()),
          focus_request:
            unwrap!(component_non_negative_integer_attr(term, Atoms.focus_request())).unwrap_or(0),
          focus: string_attr(term, Atoms.phx_focus()),

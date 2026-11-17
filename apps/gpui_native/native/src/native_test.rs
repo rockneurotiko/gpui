@@ -47,6 +47,10 @@ enum TestCommand {
         delta_y: f32,
         reply: TestCommandReply<()>,
     },
+    ScrollToTop {
+        element_id: String,
+        reply: TestCommandReply<()>,
+    },
     Input {
         text: String,
         reply: TestCommandReply<()>,
@@ -412,6 +416,13 @@ fn handle_non_stop_command(session: &mut TestSession, command: TestCommand) {
             session.context.run_until_parked();
             let _ = reply.send(Ok(()));
         }
+        TestCommand::ScrollToTop { element_id, reply } => {
+            crate::element::scroll::scroll_to_top(&element_id);
+            session.context.run_until_parked();
+            draw_root(session);
+            session.context.run_until_parked();
+            let _ = reply.send(Ok(()));
+        }
         TestCommand::Advance {
             milliseconds,
             reply,
@@ -529,6 +540,17 @@ pub(crate) fn scroll(
         reply,
     })
 }
+#[cfg(feature = "native-test")]
+pub(crate) fn scroll_to_top(
+    session: &rustler::ResourceArc<NativeTestSessionResource>,
+    element_id: String,
+) -> Result<(), String> {
+    execute(session, |reply| TestCommand::ScrollToTop {
+        element_id,
+        reply,
+    })
+}
+
 #[cfg(feature = "native-test")]
 pub(crate) fn input(
     session: &rustler::ResourceArc<NativeTestSessionResource>,

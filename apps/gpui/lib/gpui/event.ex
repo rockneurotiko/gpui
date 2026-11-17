@@ -24,6 +24,7 @@ defmodule GPUI.Event do
           | :range_geometry
           | :hit_test
           | :bounds
+          | :scroll
           | :focus
           | :blur
           | :keydown
@@ -76,6 +77,7 @@ defmodule GPUI.Event do
     :range_geometry,
     :hit_test,
     :bounds,
+    :scroll,
     :focus,
     :blur,
     :keydown,
@@ -223,6 +225,7 @@ defmodule GPUI.Event do
   defp normalize_value(:range_geometry, event), do: require_value(event, &is_list/1)
   defp normalize_value(:hit_test, event), do: require_value(event, &is_map/1)
   defp normalize_value(:bounds, event), do: require_value(event, &is_map/1)
+  defp normalize_value(:scroll, event), do: require_value(event, &valid_scroll?/1)
 
   defp normalize_value(type, event) when type in [:focus, :blur],
     do: require_value(event, &valid_focus?/1)
@@ -253,6 +256,9 @@ defmodule GPUI.Event do
     do: is_integer(first) and first >= 0 and is_integer(last) and last >= first
 
   defp valid_range?(_value), do: false
+
+  defp valid_scroll?(%{offset_y: offset}), do: finite_number?(offset) and offset >= 0
+  defp valid_scroll?(_value), do: false
 
   defp valid_focus?(%{id: id}), do: is_binary(id) and id != "" and String.valid?(id)
   defp valid_focus?(_value), do: false

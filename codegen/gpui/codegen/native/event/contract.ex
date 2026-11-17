@@ -27,6 +27,8 @@ defmodule GPUI.Codegen.Native.Event.Contract do
          :encode_focus_event, [:env, A.ref(:kind), :window_id, :event, :id]},
         {:Bounds, "real-gpui", named ++ [value: quote(do: ElementBoundsGeometry.t())],
          :encode_bounds_event, [:env, :window_id, :event, :value]},
+        {:Scroll, "real-gpui", named ++ [offset_y: quote(do: RustQ.Type.f64())],
+         :encode_scroll_event, [:env, :window_id, :event, :offset_y]},
         {:ClipboardWrite, "components", named, :encode_named_event,
          [:env, atom(:clipboard_write), :window_id, :event]},
         {:ClipboardRead, "components", named ++ [payload: quote(do: TransferPayload.t())],

@@ -470,6 +470,9 @@ pub(crate) enum WindowCommand {
         name: String,
         reply: WindowCommandReply,
     },
+    ScrollToTop {
+        element_id: String,
+    },
     SetTheme {
         mode: NativeThemeMode,
         reply: WindowCommandReply,
@@ -664,6 +667,10 @@ fn handle_window_command(
                 }
             };
             send_reply(reply, result);
+        }
+        WindowCommand::ScrollToTop { element_id } => {
+            crate::element::scroll::scroll_to_top(&element_id);
+            cx.refresh_windows();
         }
         WindowCommand::SetTheme { mode, reply } => {
             let result = set_component_theme(mode, windows, cx);

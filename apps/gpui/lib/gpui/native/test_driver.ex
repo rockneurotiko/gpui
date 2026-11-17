@@ -50,6 +50,13 @@ defmodule GPUI.Native.TestDriver do
   )
 
   (
+    @doc "Scrolls a target back to its top in a deterministic native-test session."
+    def scroll_to_top(id, target) do
+      GPUI.Native.Backend.native_test_scroll_to_top(id, target)
+    end
+  )
+
+  (
     @doc "Types text into a deterministic native-test session."
     def input(id, text) do
       GPUI.Native.Backend.native_test_input(id, text)

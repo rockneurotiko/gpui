@@ -189,6 +189,15 @@ fn native_test_scroll<'a>(
 }
 #[rustler::nif(schedule = "DirtyIo")]
 #[allow(unused_variables)]
+fn native_test_scroll_to_top<'a>(
+    env: Env<'a>,
+    session: ResourceArc<native_test::NativeTestSessionResource>,
+    target: String,
+) -> NifResult<Term<'a>> {
+    native_test_scroll_to_top_impl(env, session, target_request(target))
+}
+#[rustler::nif(schedule = "DirtyIo")]
+#[allow(unused_variables)]
 fn native_test_input<'a>(
     env: Env<'a>,
     session: ResourceArc<native_test::NativeTestSessionResource>,

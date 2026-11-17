@@ -185,6 +185,11 @@ defmodule GPUI.Test do
   @spec type(GPUI.Test.UI.t(), String.t()) :: GPUI.Test.UI.t()
   def type(%GPUI.Test.UI{} = ui, text), do: GPUI.Test.NativeSession.type(ui, text)
 
+  @doc "Scrolls a stable target back to its top, as `GPUI.Command.scroll_to_top/1` does."
+  @spec scroll_to_top(GPUI.Test.UI.t(), String.t()) :: GPUI.Test.UI.t()
+  def scroll_to_top(%GPUI.Test.UI{} = ui, target),
+    do: GPUI.Test.NativeSession.scroll_to_top(ui, target)
+
   @doc "Resizes the deterministic native viewport."
   @spec resize(GPUI.Test.UI.t(), {number(), number()}) :: GPUI.Test.UI.t()
   def resize(%GPUI.Test.UI{} = ui, size), do: GPUI.Test.NativeSession.resize(ui, size)

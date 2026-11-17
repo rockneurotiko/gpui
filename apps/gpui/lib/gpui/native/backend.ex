@@ -64,6 +64,9 @@ defmodule GPUI.Native.Backend do
   @doc "Sets the process-global native application identity."
   def set_app_identity(identifier, name), do: call(:set_app_identity, [identifier, name])
 
+  @doc "Scrolls the native scroll containers with this element ID back to the top."
+  def scroll_to_top(element_id), do: call(:scroll_to_top, [element_id])
+
   @doc "Starts one native runtime namespace."
   def start_runtime, do: call(:start_runtime, [])
 
@@ -141,6 +144,10 @@ defmodule GPUI.Native.Backend do
   @doc "Scrolls a target in a deterministic native-test session."
   def native_test_scroll(session, target, delta_x, delta_y),
     do: call(:native_test_scroll, [session, target, delta_x, delta_y])
+
+  @doc "Scrolls a target back to its top in a deterministic native-test session."
+  def native_test_scroll_to_top(session, target),
+    do: call(:native_test_scroll_to_top, [session, target])
 
   @doc "Types text into the focused deterministic native-test control."
   def native_test_input(session, text), do: call(:native_test_input, [session, text])

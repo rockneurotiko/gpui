@@ -34,6 +34,10 @@ defmodule GPUI.Native.Generated do
         :erlang.nif_error(:nif_not_loaded)
       end
 
+      def scroll_to_top(_element_id) do
+        :erlang.nif_error(:nif_not_loaded)
+      end
+
       def start_runtime do
         :erlang.nif_error(:nif_not_loaded)
       end
@@ -123,6 +127,10 @@ defmodule GPUI.Native.Generated do
       end
 
       def native_test_scroll(_session, _target, _delta_x, _delta_y) do
+        :erlang.nif_error(:nif_not_loaded)
+      end
+
+      def native_test_scroll_to_top(_session, _target) do
         :erlang.nif_error(:nif_not_loaded)
       end
 

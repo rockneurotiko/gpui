@@ -101,4 +101,15 @@ defmodule GPUI.EventTest do
                value: %{first: 5, last: 2}
              })
   end
+
+  test "scroll events carry a non-negative finite offset" do
+    scroll = %{type: :scroll, window_id: 1, event: "feed_scrolled"}
+
+    assert {:ok, %{value: %{offset_y: 0.0}}} =
+             Event.normalize(Map.put(scroll, :value, %{offset_y: 0.0}))
+
+    for value <- [%{offset_y: -1.0}, %{offset_y: "10"}, %{}, 12] do
+      assert {:error, {:invalid_event, :value}} = Event.normalize(Map.put(scroll, :value, value))
+    end
+  end
 end

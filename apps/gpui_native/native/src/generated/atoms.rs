@@ -90,23 +90,23 @@ mod atoms {
         "phx-geometry-change", phx_hit_test = "phx-hit-test", phx_keydown =
         "phx-keydown", phx_keyup = "phx-keyup", phx_link = "phx-link", phx_range =
         "phx-range", phx_range_geometry_change = "phx-range-geometry-change", phx_release
-        = "phx-release", phx_search = "phx-search", phx_select = "phx-select",
-        phx_selection_change = "phx-selection-change", phx_sort = "phx-sort", phx_submit
-        = "phx-submit", phx_toggle = "phx-toggle", phx_transaction = "phx-transaction",
-        phx_viewport_change = "phx-viewport-change", placeholder = "placeholder",
-        position = "position", position_mode = "position_mode", position_x =
-        "position_x", position_y = "position_y", priority = "priority", range = "range",
-        range_geometry = "range_geometry", raster = "raster", reason = "reason",
+        = "phx-release", phx_scroll = "phx-scroll", phx_search = "phx-search", phx_select
+        = "phx-select", phx_selection_change = "phx-selection-change", phx_sort =
+        "phx-sort", phx_submit = "phx-submit", phx_toggle = "phx-toggle", phx_transaction
+        = "phx-transaction", phx_viewport_change = "phx-viewport-change", placeholder =
+        "placeholder", position = "position", position_mode = "position_mode", position_x
+        = "position_x", position_y = "position_y", priority = "priority", range =
+        "range", range_geometry = "range_geometry", raster = "raster", reason = "reason",
         reduced_transparency = "reduced_transparency", release = "release",
         resize_request = "resize_request", resource_ref = "resource_ref", resource_type =
         "resource_type", reveal = "reveal", reveal_index = "reveal_index", reveal_request
         = "reveal_request", reveal_strategy = "reveal_strategy", reverse = "reverse",
-        revision = "revision", right = "right", runs = "runs", scale = "scale",
-        scroll_request = "scroll_request", scroll_to = "scroll_to", search = "search",
-        search_placeholder = "search_placeholder", select = "select", selectable =
-        "selectable", selected = "selected", selected_column = "selected_column",
-        selected_index = "selected_index", selection = "selection", set_size =
-        "set_size", shift = "shift", show_line_numbers = "show_line_numbers",
+        revision = "revision", right = "right", runs = "runs", scale = "scale", scroll =
+        "scroll", scroll_request = "scroll_request", scroll_to = "scroll_to", search =
+        "search", search_placeholder = "search_placeholder", select = "select",
+        selectable = "selectable", selected = "selected", selected_column =
+        "selected_column", selected_index = "selected_index", selection = "selection",
+        set_size = "set_size", shift = "shift", show_line_numbers = "show_line_numbers",
         show_whitespaces = "show_whitespaces", side = "side", size = "size", sizes =
         "sizes", soft_wrap = "soft_wrap", sort = "sort", sort_column = "sort_column",
         sort_direction = "sort_direction", sortable = "sortable", source = "source",

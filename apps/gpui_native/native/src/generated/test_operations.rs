@@ -173,6 +173,25 @@ pub(crate) fn native_test_scroll_impl<'a>(
     Ok((atoms::error(), "native_test_disabled").encode(env))
 }
 #[cfg(feature = "native-test")]
+pub(crate) fn native_test_scroll_to_top_impl<'a>(
+    env: Env<'a>,
+    session: ResourceArc<native_test::NativeTestSessionResource>,
+    request: TargetRequest,
+) -> NifResult<Term<'a>> {
+    match scroll_to_top(&session, request.target) {
+        Ok(_unit) => Ok((atoms::ok(), atoms::ok()).encode(env)),
+        Err(reason) => Ok((atoms::error(), reason).encode(env)),
+    }
+}
+#[cfg(not(feature = "native-test"))]
+pub(crate) fn native_test_scroll_to_top_impl<'a>(
+    env: Env<'a>,
+    _session: ResourceArc<native_test::NativeTestSessionResource>,
+    _request: TargetRequest,
+) -> NifResult<Term<'a>> {
+    Ok((atoms::error(), "native_test_disabled").encode(env))
+}
+#[cfg(feature = "native-test")]
 pub(crate) fn native_test_resize_impl<'a>(
     env: Env<'a>,
     session: ResourceArc<native_test::NativeTestSessionResource>,

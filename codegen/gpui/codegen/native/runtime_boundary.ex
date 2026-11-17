@@ -17,6 +17,11 @@ defmodule GPUI.Codegen.Native.RuntimeBoundary do
     set_app_identity_impl(nif_env(), identifier, name)
   end
 
+  @spec scroll_to_top(String.t()) :: R.nif_result(term())
+  defnif scroll_to_top(element_id) do
+    scroll_to_top_impl(nif_env(), element_id)
+  end
+
   @nif schedule: :dirty_io
   @spec start_runtime() :: R.nif_result(term())
   defnif(start_runtime(), do: start_runtime_impl(nif_env()))

@@ -23,6 +23,7 @@ defmodule GPUI.Codegen.Native.Event.ContractTest do
              :HitTest,
              :Focus,
              :Bounds,
+             :Scroll,
              :ClipboardWrite,
              :ClipboardRead,
              :Transfer,

@@ -4,7 +4,7 @@ mod generated_test_operations {
     #[cfg(feature = "native-test")]
     use crate::native_test::{
         advance, bounds, click, click_at, drag, events, focus, idle, input, key, modifiers, render,
-        resize, scroll, start, stop,
+        resize, scroll, scroll_to_top, start, stop,
     };
     use crate::*;
     use rustler::Error;
@@ -14,8 +14,8 @@ pub(crate) use generated_test_operations::{
     native_test_advance_impl, native_test_bounds_impl, native_test_click_at_impl,
     native_test_click_impl, native_test_drag_impl, native_test_events_impl, native_test_focus_impl,
     native_test_idle_impl, native_test_input_impl, native_test_key_impl, native_test_render_impl,
-    native_test_resize_impl, native_test_scroll_impl, native_test_start_impl,
-    native_test_stop_impl,
+    native_test_resize_impl, native_test_scroll_impl, native_test_scroll_to_top_impl,
+    native_test_start_impl, native_test_stop_impl,
 };
 
 pub(crate) fn host_info_impl<'a>(env: Env<'a>) -> NifResult<Term<'a>> {
@@ -63,6 +63,21 @@ pub(crate) fn set_app_identity_impl<'a>(
     _identifier: String,
     _name: String,
 ) -> NifResult<Term<'a>> {
+    Ok((atoms::ok(), atoms::ok()).encode(env))
+}
+
+/// Resets a scroll container's offset. Nothing happens when no GPUI loop is running or the
+/// ID is unknown.
+#[cfg(feature = "real-gpui")]
+pub(crate) fn scroll_to_top_impl<'a>(env: Env<'a>, element_id: String) -> NifResult<Term<'a>> {
+    if let Some(sender) = crate::runtime::running_command_sender() {
+        let _ = sender.unbounded_send(WindowCommand::ScrollToTop { element_id });
+    }
+    Ok((atoms::ok(), atoms::ok()).encode(env))
+}
+
+#[cfg(not(feature = "real-gpui"))]
+pub(crate) fn scroll_to_top_impl<'a>(env: Env<'a>, _element_id: String) -> NifResult<Term<'a>> {
     Ok((atoms::ok(), atoms::ok()).encode(env))
 }
 

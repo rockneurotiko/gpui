@@ -558,6 +558,7 @@ pub(crate) struct ContainerNode {
     pub(crate) children: Vec<ElementNode>,
     pub(crate) click: Option<String>,
     pub(crate) bounds_change: Option<String>,
+    pub(crate) scroll: Option<String>,
     pub(crate) focus_request: u64,
     pub(crate) focus: Option<String>,
     pub(crate) blur: Option<String>,
@@ -785,6 +786,7 @@ pub(crate) fn decode_container_node<'a>(
             children: decode_children(term)?,
             click: string_attr(term, atoms::phx_click()),
             bounds_change: string_attr(term, atoms::phx_bounds_change()),
+            scroll: string_attr(term, atoms::phx_scroll()),
             focus_request: component_non_negative_integer_attr(
                     term,
                     atoms::focus_request(),

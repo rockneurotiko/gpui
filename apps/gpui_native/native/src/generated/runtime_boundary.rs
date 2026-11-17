@@ -14,6 +14,11 @@ fn set_app_identity<'a>(
 ) -> NifResult<Term<'a>> {
     set_app_identity_impl(env, identifier, name)
 }
+#[rustler::nif]
+#[allow(unused_variables)]
+fn scroll_to_top<'a>(env: Env<'a>, element_id: String) -> NifResult<Term<'a>> {
+    scroll_to_top_impl(env, element_id)
+}
 #[rustler::nif(schedule = "DirtyIo")]
 #[allow(unused_variables)]
 fn start_runtime<'a>(env: Env<'a>) -> NifResult<Term<'a>> {

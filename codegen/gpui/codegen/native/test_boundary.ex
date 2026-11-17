@@ -178,6 +178,15 @@ defmodule GPUI.Codegen.Native.TestBoundary do
   end
 
   @nif schedule: :dirty_io
+  @spec native_test_scroll_to_top(
+          R.resource(NativeTest.NativeTestSessionResource.t()),
+          String.t()
+        ) :: R.nif_result(term())
+  defnif native_test_scroll_to_top(session, target) do
+    native_test_scroll_to_top_impl(nif_env(), session, target_request(target))
+  end
+
+  @nif schedule: :dirty_io
   @spec native_test_input(
           R.resource(NativeTest.NativeTestSessionResource.t()),
           String.t()

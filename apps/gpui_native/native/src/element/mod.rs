@@ -6,6 +6,8 @@ pub(crate) mod component_registry;
 #[cfg(feature = "components")]
 pub(crate) mod controlled;
 pub(crate) mod event;
+#[cfg(feature = "real-gpui")]
+pub(crate) mod scroll;
 
 use event::{apply_click_event, apply_input_events, StateColors};
 
@@ -43,6 +45,7 @@ impl ElementNode {
             children: Vec::new(),
             click: None,
             bounds_change: None,
+            scroll: None,
             focus_request: 0,
             focus: None,
             blur: None,
@@ -933,6 +936,7 @@ pub(crate) fn render_container_primitive(
         children,
         click,
         bounds_change,
+        scroll,
         focus_request,
         focus,
         blur,
@@ -1074,7 +1078,34 @@ pub(crate) fn render_container_primitive(
                 context.id_namespace
             )
         });
-        let element = element.id(scroll_id.clone()).overflow_y_scroll();
+        let debug_selector = scroll_id.clone();
+        let mut element = element
+            .debug_selector(|| debug_selector)
+            .id(scroll_id.clone())
+            .overflow_y_scroll();
+        // Only containers with a stable ID (or a scroll subscription) keep a handle; the rest
+        // scroll with GPUI's own per-element state as before.
+        if let Some(tracked) = (stable_id.is_some() || scroll.is_some())
+            .then(|| scroll::entry(window_id, &scroll_id))
+            .flatten()
+        {
+            element = element.track_scroll(&tracked.handle);
+            if let Some(event) = scroll {
+                use gpui::Styled;
+
+                let runtime_for_scroll = runtime.clone();
+                element = element.child(
+                    gpui::canvas(
+                        move |_bounds, _window, cx| {
+                            scroll::observe(&tracked, &runtime_for_scroll, window_id, &event, cx);
+                        },
+                        |_bounds, _prepaint, _window, _cx| {},
+                    )
+                    .absolute()
+                    .inset_0(),
+                );
+            }
+        }
         let element = apply_window_control(element, window_control, runtime.clone(), window_id);
         let element = if let Some(event) = click {
             let runtime_for_click = runtime.clone();
