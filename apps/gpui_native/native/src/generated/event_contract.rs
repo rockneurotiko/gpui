@@ -4,7 +4,7 @@
 pub(crate) enum NativeEvent {
     #[cfg(feature = "components")]
     Copy { window_id: u64, event: String },
-    Click { window_id: u64, event: String },
+    Click { window_id: u64, event: String, shift: bool, ctrl: bool, meta: bool },
     Command { window_id: u64, event: String },
     Input { kind: InputKind, window_id: u64, event: String, value: Option<EventValue> },
     #[cfg(feature = "components")]
@@ -78,8 +78,8 @@ pub(crate) fn encode_native_event<'a>(
         NativeEvent::Copy { window_id, event } => {
             encode_named_event(env, atoms::copy(), window_id, event)
         }
-        NativeEvent::Click { window_id, event } => {
-            encode_named_event(env, atoms::click(), window_id, event)
+        NativeEvent::Click { window_id, event, shift, ctrl, meta } => {
+            encode_click_event(env, window_id, event, shift, ctrl, meta)
         }
         NativeEvent::Command { window_id, event } => {
             encode_named_event(env, atoms::command(), window_id, event)

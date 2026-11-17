@@ -454,9 +454,6 @@ defmodule GPUI.Runtime do
     end
   end
 
-  defp synchronize_display_events(state, [], handled, _snapshot),
-    do: {:ok, handled, record_events(state, handled)}
-
   defp synchronize_display_events(state, _events, handled, snapshot) do
     state = record_events(state, handled)
 

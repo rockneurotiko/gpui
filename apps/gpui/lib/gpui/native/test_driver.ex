@@ -23,8 +23,8 @@ defmodule GPUI.Native.TestDriver do
 
   (
     @doc "Clicks a target in a deterministic native-test session."
-    def click(id, target) do
-      GPUI.Native.Backend.native_test_click(id, target)
+    def click(id, target, shift, ctrl, meta) do
+      GPUI.Native.Backend.native_test_click(id, target, shift, ctrl, meta)
     end
   )
 
@@ -37,8 +37,8 @@ defmodule GPUI.Native.TestDriver do
 
   (
     @doc "Clicks coordinates in a deterministic native-test session."
-    def click_at(id, x, y) do
-      GPUI.Native.Backend.native_test_click_at(id, x, y)
+    def click_at(id, x, y, shift, ctrl, meta) do
+      GPUI.Native.Backend.native_test_click_at(id, x, y, shift, ctrl, meta)
     end
   )
 

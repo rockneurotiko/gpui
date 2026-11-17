@@ -3,8 +3,8 @@ use crate::*;
 mod generated_test_operations {
     #[cfg(feature = "native-test")]
     use crate::native_test::{
-        advance, bounds, click, click_at, drag, events, focus, idle, input, key, render, resize,
-        scroll, start, stop,
+        advance, bounds, click, click_at, drag, events, focus, idle, input, key, modifiers, render,
+        resize, scroll, start, stop,
     };
     use crate::*;
     use rustler::Error;
@@ -575,6 +575,9 @@ pub(crate) fn inject_event_impl<'a>(
                 NativeEvent::Click {
                     window_id,
                     event: event_name,
+                    shift: false,
+                    ctrl: false,
+                    meta: false,
                 },
             )?;
         }

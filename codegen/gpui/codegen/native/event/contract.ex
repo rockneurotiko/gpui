@@ -10,10 +10,12 @@ defmodule GPUI.Codegen.Native.Event.Contract do
     named = [window_id: quote(do: RustQ.Type.u64()), event: quote(do: String.t())]
     window = [window_id: quote(do: RustQ.Type.u64())]
     value = quote(do: RustQ.Type.option(EventValue.t()))
+    modifiers = [shift: quote(do: boolean()), ctrl: quote(do: boolean()), meta: quote(do: boolean())]
 
     [
       {:Copy, "components", named, :encode_named_event, [:env, atom(:copy), :window_id, :event]},
-      {:Click, nil, named, :encode_named_event, [:env, atom(:click), :window_id, :event]},
+      {:Click, nil, named ++ modifiers, :encode_click_event,
+       [:env, :window_id, :event, :shift, :ctrl, :meta]},
       {:Command, nil, named, :encode_named_event, [:env, atom(:command), :window_id, :event]},
       {:Input, nil, [kind: quote(do: InputKind.t())] ++ named ++ [value: value],
        :encode_input_event, [:env, A.ref(:kind), :window_id, :event, :value]}

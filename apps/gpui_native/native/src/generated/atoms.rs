@@ -29,10 +29,10 @@ mod atoms {
         clipboard_write = "clipboard_write", closable = "closable", close_button =
         "close_button", collapsed = "collapsed", collapsible = "collapsible", color =
         "color", command = "command", commands = "commands", compact = "compact", content
-        = "content", copy = "copy", cursor = "cursor", dark = "dark", dashed = "dashed",
-        data = "data", decorations = "decorations", delay = "delay", disabled =
-        "disabled", display = "display", drag_enter = "drag_enter", drag_leave =
-        "drag_leave", drag_move = "drag_move", drop = "drop", edges = "edges", error =
+        = "content", copy = "copy", ctrl = "ctrl", cursor = "cursor", dark = "dark",
+        dashed = "dashed", data = "data", decorations = "decorations", delay = "delay",
+        disabled = "disabled", display = "display", drag_enter = "drag_enter", drag_leave
+        = "drag_leave", drag_move = "drag_move", drop = "drop", edges = "edges", error =
         "error", event = "event", expanded = "expanded", fallback = "fallback",
         file_max_bytes = "file_max_bytes", file_prompt = "file_prompt", file_read =
         "file_read", first = "first", fit = "fit", flex = "flex", flex_basis =
@@ -65,8 +65,8 @@ mod atoms {
         margin_top = "margin_top", margin_x = "margin_x", margin_y = "margin_y", masked =
         "masked", max = "max", max_columns = "max_columns", max_height = "max_height",
         max_lines = "max_lines", max_sizes = "max_sizes", max_width = "max_width", menu =
-        "menu", min = "min", min_height = "min_height", min_lines = "min_lines",
-        min_sizes = "min_sizes", min_width = "min_width", missing_resource =
+        "menu", meta = "meta", min = "min", min_height = "min_height", min_lines =
+        "min_lines", min_sizes = "min_sizes", min_width = "min_width", missing_resource =
         "missing_resource", mode = "mode", motion_delay = "motion_delay", motion_duration
         = "motion_duration", motion_easing = "motion_easing", motion_from_opacity =
         "motion_from_opacity", motion_from_x = "motion_from_x", motion_from_y =
@@ -106,21 +106,22 @@ mod atoms {
         search_placeholder = "search_placeholder", select = "select", selectable =
         "selectable", selected = "selected", selected_column = "selected_column",
         selected_index = "selected_index", selection = "selection", set_size =
-        "set_size", show_line_numbers = "show_line_numbers", show_whitespaces =
-        "show_whitespaces", side = "side", size = "size", sizes = "sizes", soft_wrap =
-        "soft_wrap", sort = "sort", sort_column = "sort_column", sort_direction =
-        "sort_direction", sortable = "sortable", source = "source", stale_revision =
-        "stale_revision", status = "status", step = "step", stride = "stride", style =
-        "style", style_runs = "style_runs", submit = "submit", submit_policy =
-        "submit_policy", tab_size = "tab_size", tab_width = "tab_width", text = "text",
-        text_align = "text_align", text_buffer_lock_failed = "text_buffer_lock_failed",
-        text_overflow = "text_overflow", text_transform = "text_transform", title =
-        "title", toggle = "toggle", top = "top", total_count = "total_count", transaction
-        = "transaction", transaction_conflict = "transaction_conflict", truncate =
-        "truncate", type_atom = "type", underline = "underline", value = "value", vanilla
-        = "vanilla", variant = "variant", viewport = "viewport", white_space =
-        "white_space", width = "width", window_blur = "window_blur", window_close_request
-        = "window_close_request", window_closed = "window_closed", window_control =
-        "window_control", window_focus = "window_focus", window_id = "window_id"
+        "set_size", shift = "shift", show_line_numbers = "show_line_numbers",
+        show_whitespaces = "show_whitespaces", side = "side", size = "size", sizes =
+        "sizes", soft_wrap = "soft_wrap", sort = "sort", sort_column = "sort_column",
+        sort_direction = "sort_direction", sortable = "sortable", source = "source",
+        stale_revision = "stale_revision", status = "status", step = "step", stride =
+        "stride", style = "style", style_runs = "style_runs", submit = "submit",
+        submit_policy = "submit_policy", tab_size = "tab_size", tab_width = "tab_width",
+        text = "text", text_align = "text_align", text_buffer_lock_failed =
+        "text_buffer_lock_failed", text_overflow = "text_overflow", text_transform =
+        "text_transform", title = "title", toggle = "toggle", top = "top", total_count =
+        "total_count", transaction = "transaction", transaction_conflict =
+        "transaction_conflict", truncate = "truncate", type_atom = "type", underline =
+        "underline", value = "value", vanilla = "vanilla", variant = "variant", viewport
+        = "viewport", white_space = "white_space", width = "width", window_blur =
+        "window_blur", window_close_request = "window_close_request", window_closed =
+        "window_closed", window_control = "window_control", window_focus =
+        "window_focus", window_id = "window_id"
     }
 }

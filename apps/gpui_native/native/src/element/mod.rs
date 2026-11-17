@@ -1078,13 +1078,12 @@ pub(crate) fn render_container_primitive(
         let element = apply_window_control(element, window_control, runtime.clone(), window_id);
         let element = if let Some(event) = click {
             let runtime_for_click = runtime.clone();
-            element.on_click(move |_event, _window, _cx| {
-                let _ = push_event(
+            element.on_click(move |click, _window, _cx| {
+                event::emit_modified_click_event(
                     &runtime_for_click,
-                    NativeEvent::Click {
-                        window_id,
-                        event: event.clone(),
-                    },
+                    window_id,
+                    &event,
+                    click.modifiers(),
                 );
             })
         } else {

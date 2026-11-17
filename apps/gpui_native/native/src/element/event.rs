@@ -232,8 +232,13 @@ pub(crate) fn apply_click_event(
 
         let element = if enabled {
             element
-                .on_click(move |_event, _window, _cx| {
-                    emit_click_event(&pointer_runtime, window_id, &pointer_event);
+                .on_click(move |click, _window, _cx| {
+                    emit_modified_click_event(
+                        &pointer_runtime,
+                        window_id,
+                        &pointer_event,
+                        click.modifiers(),
+                    );
                 })
                 .on_a11y_action(AccessibleAction::Click, move |_data, _window, _cx| {
                     emit_click_event(&runtime, window_id, &event);
@@ -255,11 +260,26 @@ pub(crate) fn apply_click_event(
 
 #[cfg(feature = "real-gpui")]
 pub(crate) fn emit_click_event(runtime: &SharedRuntime, window_id: u64, event: &str) {
+    emit_modified_click_event(runtime, window_id, event, gpui::Modifiers::default());
+}
+
+/// Pointer clicks report the modifier keys held at release; keyboard and accessibility
+/// activation have none.
+#[cfg(feature = "real-gpui")]
+pub(crate) fn emit_modified_click_event(
+    runtime: &SharedRuntime,
+    window_id: u64,
+    event: &str,
+    modifiers: gpui::Modifiers,
+) {
     let _ = push_event(
         runtime,
         NativeEvent::Click {
             window_id,
             event: event.to_string(),
+            shift: modifiers.shift,
+            ctrl: modifiers.control,
+            meta: modifiers.platform,
         },
     );
 }
@@ -337,7 +357,7 @@ mod tests {
         let events = runtime.events.lock().expect("event queue");
         assert!(matches!(
             events.as_slice(),
-            [NativeEvent::Click { window_id: 9, event }] if event == "open-settings"
+            [NativeEvent::Click { window_id: 9, event, .. }] if event == "open-settings"
         ));
     }
 
@@ -376,7 +396,7 @@ mod tests {
         for event in events.iter() {
             assert!(matches!(
                 event,
-                NativeEvent::Click { window_id: 7, event } if event == "toggle"
+                NativeEvent::Click { window_id: 7, event, .. } if event == "toggle"
             ));
         }
     }

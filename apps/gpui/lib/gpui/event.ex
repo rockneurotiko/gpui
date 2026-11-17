@@ -45,6 +45,9 @@ defmodule GPUI.Event do
           required(:window_id) => pos_integer(),
           optional(:event) => String.t(),
           optional(:value) => term(),
+          optional(:shift) => boolean(),
+          optional(:ctrl) => boolean(),
+          optional(:meta) => boolean(),
           optional(atom()) => term()
         }
 
@@ -99,6 +102,7 @@ defmodule GPUI.Event do
   ]
   @injectable_types @injectable_routed_types ++ @lifecycle_types
   @known_types @routed_types ++ @lifecycle_types
+  @click_modifiers [:shift, :ctrl, :meta]
   @max_event_name_bytes 512
   @max_file_read_bytes 25 * 1_024 * 1_024
 
@@ -179,7 +183,18 @@ defmodule GPUI.Event do
     end
   end
 
-  defp normalize_value(type, event) when type in [:click, :command, :clipboard_write, :copy] do
+  # Hosts that predate modifier reporting send clicks without the flags.
+  defp normalize_value(:click, event) do
+    event = Enum.reduce(@click_modifiers, event, &Map.put_new(&2, &1, false))
+
+    cond do
+      Map.has_key?(event, :value) -> invalid(:value)
+      Enum.all?(@click_modifiers, &is_boolean(Map.fetch!(event, &1))) -> {:ok, event}
+      true -> invalid(:modifiers)
+    end
+  end
+
+  defp normalize_value(type, event) when type in [:command, :clipboard_write, :copy] do
     if Map.has_key?(event, :value), do: invalid(:value), else: {:ok, event}
   end
 

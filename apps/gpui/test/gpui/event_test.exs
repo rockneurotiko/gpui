@@ -56,6 +56,17 @@ defmodule GPUI.EventTest do
              Event.normalize(%{type: :window_focus, window_id: 1, event: "focus"})
   end
 
+  test "click without modifier flags decodes with all of them false" do
+    assert {:ok, %{shift: false, ctrl: false, meta: false}} =
+             Event.normalize(%{type: :click, window_id: 1, event: "save"})
+
+    assert {:ok, %{shift: true, ctrl: false, meta: false}} =
+             Event.normalize(%{type: :click, window_id: 1, event: "save", shift: true})
+
+    assert {:error, {:invalid_event, :modifiers}} =
+             Event.normalize(%{type: :click, window_id: 1, event: "save", ctrl: 1})
+  end
+
   test "validates representative event value shapes" do
     assert {:ok, %{type: :click}} =
              Event.normalize(%{type: :click, window_id: 1, event: "save"})

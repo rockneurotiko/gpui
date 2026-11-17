@@ -24,10 +24,12 @@ enum TestCommand {
         reply: TestCommandReply<()>,
     },
     Click {
+        modifiers: gpui::Modifiers,
         element_id: &'static str,
         reply: TestCommandReply<()>,
     },
     ClickAt {
+        modifiers: gpui::Modifiers,
         x: f32,
         y: f32,
         reply: TestCommandReply<()>,
@@ -309,19 +311,25 @@ fn handle_non_stop_command(session: &mut TestSession, command: TestCommand) {
             });
             let _ = reply.send(result);
         }
-        TestCommand::Click { element_id, reply } => {
+        TestCommand::Click {
+            element_id,
+            modifiers,
+            reply,
+        } => {
             let result = target_bounds(&mut session.context, element_id).map(|bounds| {
-                session
-                    .context
-                    .simulate_click(bounds.center(), gpui::Modifiers::default());
+                session.context.simulate_click(bounds.center(), modifiers);
             });
             let _ = reply.send(result);
         }
-        TestCommand::ClickAt { x, y, reply } => {
-            session.context.simulate_click(
-                gpui::point(gpui::px(x), gpui::px(y)),
-                gpui::Modifiers::default(),
-            );
+        TestCommand::ClickAt {
+            x,
+            y,
+            modifiers,
+            reply,
+        } => {
+            session
+                .context
+                .simulate_click(gpui::point(gpui::px(x), gpui::px(y)), modifiers);
             let _ = reply.send(Ok(()));
         }
         TestCommand::Drag {
@@ -453,21 +461,42 @@ pub(crate) fn focus(
         reply,
     })
 }
+/// Builds the modifier keys held during a simulated click; `meta` is the platform key.
+#[cfg(feature = "native-test")]
+pub(crate) fn modifiers(shift: bool, ctrl: bool, meta: bool) -> gpui::Modifiers {
+    gpui::Modifiers {
+        shift,
+        control: ctrl,
+        platform: meta,
+        ..Default::default()
+    }
+}
 #[cfg(feature = "native-test")]
 pub(crate) fn click(
     session: &rustler::ResourceArc<NativeTestSessionResource>,
     element_id: String,
+    modifiers: gpui::Modifiers,
 ) -> Result<(), String> {
     let element_id = selector(session, element_id)?;
-    execute(session, |reply| TestCommand::Click { element_id, reply })
+    execute(session, |reply| TestCommand::Click {
+        element_id,
+        modifiers,
+        reply,
+    })
 }
 #[cfg(feature = "native-test")]
 pub(crate) fn click_at(
     session: &rustler::ResourceArc<NativeTestSessionResource>,
     x: f32,
     y: f32,
+    modifiers: gpui::Modifiers,
 ) -> Result<(), String> {
-    execute(session, |reply| TestCommand::ClickAt { x, y, reply })
+    execute(session, |reply| TestCommand::ClickAt {
+        x,
+        y,
+        modifiers,
+        reply,
+    })
 }
 #[cfg(feature = "native-test")]
 pub(crate) fn drag(

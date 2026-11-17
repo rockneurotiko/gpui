@@ -110,7 +110,7 @@ defmodule GPUI.Native.Generated do
         :erlang.nif_error(:nif_not_loaded)
       end
 
-      def native_test_click(_session, _target) do
+      def native_test_click(_session, _target, _shift, _ctrl, _meta) do
         :erlang.nif_error(:nif_not_loaded)
       end
 
@@ -118,7 +118,7 @@ defmodule GPUI.Native.Generated do
         :erlang.nif_error(:nif_not_loaded)
       end
 
-      def native_test_click_at(_session, _x, _y) do
+      def native_test_click_at(_session, _x, _y, _shift, _ctrl, _meta) do
         :erlang.nif_error(:nif_not_loaded)
       end
 

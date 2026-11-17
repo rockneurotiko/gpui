@@ -165,6 +165,24 @@ pub(crate) fn encode_named_event<'a>(
         ],
     )
 }
+pub(crate) fn encode_click_event<'a>(
+    env: Env<'a>,
+    window_id: u64,
+    event: String,
+    shift: bool,
+    ctrl: bool,
+    meta: bool,
+) -> NifResult<Term<'a>> {
+    encode_event_map(
+        env,
+        vec![
+            (atoms::type_atom(), atoms::click().to_term(env)), (atoms::window_id(),
+            window_id.encode(env)), (atoms::event(), event.encode(env)), (atoms::shift(),
+            shift.encode(env)), (atoms::ctrl(), ctrl.encode(env)), (atoms::meta(), meta
+            .encode(env))
+        ],
+    )
+}
 pub(crate) fn encode_window_event<'a>(
     env: Env<'a>,
     kind: Atom,

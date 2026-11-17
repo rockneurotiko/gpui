@@ -176,10 +176,6 @@ defmodule GPUI.Test do
   @spec drag(GPUI.Test.UI.t(), {number(), number()}, {number(), number()}) :: GPUI.Test.UI.t()
   def drag(%GPUI.Test.UI{} = ui, from, to), do: GPUI.Test.NativeSession.drag(ui, from, to)
 
-  @doc "Clicks a stable element ID or logical point in an interactive deterministic UI."
-  @spec click(GPUI.Test.UI.t(), String.t() | {number(), number()}) :: GPUI.Test.UI.t()
-  def click(%GPUI.Test.UI{} = ui, target), do: GPUI.Test.NativeSession.click(ui, target)
-
   @doc "Scrolls a stable target by a bounded logical-pixel delta."
   @spec scroll(GPUI.Test.UI.t(), String.t(), keyword()) :: GPUI.Test.UI.t()
   def scroll(%GPUI.Test.UI{} = ui, target, opts),
@@ -214,10 +210,23 @@ defmodule GPUI.Test do
   def advance(%GPUI.Test.UI{} = ui, milliseconds),
     do: GPUI.Test.NativeSession.advance(ui, milliseconds)
 
-  @doc "Dispatches a click event and returns the updated snapshot."
+  @doc """
+  Clicks in a deterministic UI, or dispatches a click event to a runtime.
+
+  For a `GPUI.Test.UI`, `target` is a stable element ID or logical point and the optional
+  third argument lists the keys held during the click (`:shift`, `:ctrl`, `:meta`); none by
+  default. For a runtime, it is the event name and the keyword options of the dispatch;
+  the updated snapshot is returned.
+  """
+  @spec click(GPUI.Test.UI.t(), String.t() | {number(), number()}, [:shift | :ctrl | :meta]) ::
+          GPUI.Test.UI.t()
   @spec click(GenServer.server(), String.t(), keyword()) :: Snapshot.t()
-  def click(runtime, event, opts \\ []),
-    do: dispatch_named(runtime, :click, event, opts)
+  def click(target, event, opts \\ [])
+
+  def click(%GPUI.Test.UI{} = ui, target, modifiers),
+    do: GPUI.Test.NativeSession.click(ui, target, modifiers)
+
+  def click(runtime, event, opts), do: dispatch_named(runtime, :click, event, opts)
 
   @doc "Dispatches a change event and returns the updated snapshot."
   @spec change(GenServer.server(), String.t(), term(), keyword()) :: Snapshot.t()

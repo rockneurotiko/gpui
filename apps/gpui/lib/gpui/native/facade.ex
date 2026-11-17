@@ -115,8 +115,14 @@ defmodule GPUI.Native.Facade do
         apply(GPUI.Native.Backend.module(), :native_test_focus, [_session, _target])
       end
 
-      def native_test_click(_session, _target) do
-        apply(GPUI.Native.Backend.module(), :native_test_click, [_session, _target])
+      def native_test_click(_session, _target, _shift, _ctrl, _meta) do
+        apply(GPUI.Native.Backend.module(), :native_test_click, [
+          _session,
+          _target,
+          _shift,
+          _ctrl,
+          _meta
+        ])
       end
 
       def native_test_drag(_session, _from_x, _from_y, _to_x, _to_y) do
@@ -129,8 +135,15 @@ defmodule GPUI.Native.Facade do
         ])
       end
 
-      def native_test_click_at(_session, _x, _y) do
-        apply(GPUI.Native.Backend.module(), :native_test_click_at, [_session, _x, _y])
+      def native_test_click_at(_session, _x, _y, _shift, _ctrl, _meta) do
+        apply(GPUI.Native.Backend.module(), :native_test_click_at, [
+          _session,
+          _x,
+          _y,
+          _shift,
+          _ctrl,
+          _meta
+        ])
       end
 
       def native_test_scroll(_session, _target, _delta_x, _delta_y) do

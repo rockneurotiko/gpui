@@ -70,7 +70,7 @@ pub(crate) fn render_button_component(
         || clipboard_write_event.is_some()
         || file_event.is_some()
     {
-        button = button.on_click(move |_click, window, cx| {
+        button = button.on_click(move |click, window, cx| {
             if let Some(event) = clipboard_write_event.as_ref() {
                 if let Some(text) = clipboard_text.as_ref() {
                     cx.write_to_clipboard(gpui::ClipboardItem::new_string(text.clone()));
@@ -111,12 +111,11 @@ pub(crate) fn render_button_component(
                 );
             }
             if let Some(event) = click_event.as_ref() {
-                let _ = push_event(
+                crate::element::event::emit_modified_click_event(
                     &runtime,
-                    NativeEvent::Click {
-                        window_id,
-                        event: event.clone(),
-                    },
+                    window_id,
+                    event,
+                    click.modifiers(),
                 );
             }
         });

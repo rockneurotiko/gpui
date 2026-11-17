@@ -127,14 +127,16 @@ defmodule GPUI.Native.Backend do
   def native_test_focus(session, target), do: call(:native_test_focus, [session, target])
 
   @doc "Clicks a target in a deterministic native-test session."
-  def native_test_click(session, target), do: call(:native_test_click, [session, target])
+  def native_test_click(session, target, shift, ctrl, meta),
+    do: call(:native_test_click, [session, target, shift, ctrl, meta])
 
   @doc "Drags between native-test coordinates."
   def native_test_drag(session, x1, y1, x2, y2),
     do: call(:native_test_drag, [session, x1, y1, x2, y2])
 
   @doc "Clicks native-test coordinates."
-  def native_test_click_at(session, x, y), do: call(:native_test_click_at, [session, x, y])
+  def native_test_click_at(session, x, y, shift, ctrl, meta),
+    do: call(:native_test_click_at, [session, x, y, shift, ctrl, meta])
 
   @doc "Scrolls a target in a deterministic native-test session."
   def native_test_scroll(session, target, delta_x, delta_y),

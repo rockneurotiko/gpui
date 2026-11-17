@@ -37,11 +37,14 @@ defmodule GPUI.Codegen.Native.TestOperations do
   @spec native_test_click_impl(
           Env.t(R.lifetime(:a)),
           R.resource(NativeTest.NativeTestSessionResource.t()),
-          TargetRequest.t()
+          ClickRequest.t()
         ) :: R.nif_result(term())
   @cfg feature: "native-test"
   defrust native_test_click_impl(env, session, request) do
-    encode_unit_result(env, click(ref(session), request.target))
+    encode_unit_result(
+      env,
+      click(ref(session), request.target, modifiers(request.shift, request.ctrl, request.meta))
+    )
   end
 
   @cfg not: [feature: "native-test"]
@@ -130,7 +133,12 @@ defmodule GPUI.Codegen.Native.TestOperations do
   defrust native_test_click_at_impl(env, session, request) do
     encode_unit_result(
       env,
-      click_at(ref(session), cast(request.x, R.f32()), cast(request.y, R.f32()))
+      click_at(
+        ref(session),
+        cast(request.x, R.f32()),
+        cast(request.y, R.f32()),
+        modifiers(request.shift, request.ctrl, request.meta)
+      )
     )
   end
 

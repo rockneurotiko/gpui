@@ -100,9 +100,14 @@ fn sidebar_item(
     let visual = SidebarMenuItem::new(node.label)
         .active(node.active)
         .disable(node.disabled)
-        .on_click(move |_click, _window, _cx| {
+        .on_click(move |click, _window, _cx| {
             if let Some(event) = visual_event.as_ref() {
-                crate::element::event::emit_click_event(&visual_runtime, window_id, event);
+                crate::element::event::emit_modified_click_event(
+                    &visual_runtime,
+                    window_id,
+                    event,
+                    click.modifiers(),
+                );
             }
         });
 

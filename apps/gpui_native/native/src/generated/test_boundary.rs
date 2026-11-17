@@ -5,6 +5,13 @@ pub struct AdvanceRequest {
     pub milliseconds: u64,
 }
 #[derive(Clone, Debug, rustler::NifMap)]
+pub struct ClickRequest {
+    pub target: String,
+    pub shift: bool,
+    pub ctrl: bool,
+    pub meta: bool,
+}
+#[derive(Clone, Debug, rustler::NifMap)]
 pub struct InputRequest {
     pub text: String,
 }
@@ -16,6 +23,9 @@ pub struct KeyRequest {
 pub struct PointRequest {
     pub x: f64,
     pub y: f64,
+    pub shift: bool,
+    pub ctrl: bool,
+    pub meta: bool,
 }
 #[derive(Clone, Debug, rustler::NifMap)]
 pub struct RenderRequest<'a> {
@@ -61,8 +71,23 @@ fn key_request(key: String) -> KeyRequest {
     KeyRequest { key }
 }
 #[allow(clippy::redundant_field_names)]
-fn point_request(x: f64, y: f64) -> PointRequest {
-    PointRequest { x, y }
+fn click_request(target: String, shift: bool, ctrl: bool, meta: bool) -> ClickRequest {
+    ClickRequest {
+        target,
+        shift,
+        ctrl,
+        meta,
+    }
+}
+#[allow(clippy::redundant_field_names)]
+fn point_request(x: f64, y: f64, shift: bool, ctrl: bool, meta: bool) -> PointRequest {
+    PointRequest {
+        x,
+        y,
+        shift,
+        ctrl,
+        meta,
+    }
 }
 #[allow(clippy::redundant_field_names)]
 fn scroll_request(target: String, delta_x: f64, delta_y: f64) -> ScrollRequest {
@@ -132,8 +157,11 @@ fn native_test_click<'a>(
     env: Env<'a>,
     session: ResourceArc<native_test::NativeTestSessionResource>,
     target: String,
+    shift: bool,
+    ctrl: bool,
+    meta: bool,
 ) -> NifResult<Term<'a>> {
-    native_test_click_impl(env, session, target_request(target))
+    native_test_click_impl(env, session, click_request(target, shift, ctrl, meta))
 }
 #[rustler::nif(schedule = "DirtyIo")]
 #[allow(unused_variables)]
@@ -142,8 +170,11 @@ fn native_test_click_at<'a>(
     session: ResourceArc<native_test::NativeTestSessionResource>,
     x: f64,
     y: f64,
+    shift: bool,
+    ctrl: bool,
+    meta: bool,
 ) -> NifResult<Term<'a>> {
-    native_test_click_at_impl(env, session, point_request(x, y))
+    native_test_click_at_impl(env, session, point_request(x, y, shift, ctrl, meta))
 }
 #[rustler::nif(schedule = "DirtyIo")]
 #[allow(unused_variables)]

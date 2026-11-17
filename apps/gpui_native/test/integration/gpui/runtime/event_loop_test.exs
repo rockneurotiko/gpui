@@ -120,6 +120,8 @@ defmodule GPUI.Runtime.EventLoopTest do
                       snapshot: %{windows: [%{root: %{assigns: %{count: 1}}}]}
                     }}
 
-    assert %{type: :click, event: "inc", window_id: 1} in GPUI.Runtime.events(runtime)
+    assert %{type: :click, event: "inc", window_id: 1, shift: false, ctrl: false, meta: false} in GPUI.Runtime.events(
+             runtime
+           )
   end
 end
