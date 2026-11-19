@@ -590,6 +590,7 @@ fn handle_window_command(
                     close_request,
                     focus,
                     blur,
+                    app_id: identity.as_ref().map(|(id, _)| id.clone()),
                 },
                 window_state.clone(),
                 runtime.clone(),
@@ -937,6 +938,7 @@ struct WindowOpenConfig {
     close_request: bool,
     focus: bool,
     blur: bool,
+    app_id: Option<String>,
 }
 
 #[cfg(feature = "real-gpui")]
@@ -968,6 +970,7 @@ fn open_gpui_window(
         close_request,
         focus,
         blur,
+        app_id,
     } = config;
     // Sizes larger than the screen (an app scaled up for readability) are fitted to it.
     let screen = cx
@@ -1005,6 +1008,7 @@ fn open_gpui_window(
                 titlebar,
                 app_owns_titlebar_drag: content_chrome,
                 window_decorations,
+                app_id,
                 ..Default::default()
             },
             |native_window, cx| {
