@@ -48,7 +48,8 @@ defmodule GPUI.Runtime do
           poll_interval: pos_integer() | nil,
           revision: non_neg_integer(),
           subscribers: %{pid() => reference()},
-          unsynchronized?: boolean()
+          unsynchronized?: boolean(),
+          synced_snapshot: GPUI.Snapshot.t() | nil
         }
 
   @doc "Starts a runtime linked to the caller."
@@ -175,7 +176,8 @@ defmodule GPUI.Runtime do
         poll_interval: poll_interval,
         revision: 0,
         subscribers: %{},
-        unsynchronized?: false
+        unsynchronized?: false,
+        synced_snapshot: nil
       }
 
       schedule_poll(state)
@@ -409,6 +411,13 @@ defmodule GPUI.Runtime do
     :exit, _reason -> :ok
   end
 
+  # The display already shows this snapshot: nothing to sync or publish.
+  defp synchronized_snapshot_reply(
+         {:ok, snapshot},
+         %{synced_snapshot: snapshot, unsynchronized?: false} = state
+       ),
+       do: {:reply, {:ok, snapshot}, state}
+
   defp synchronized_snapshot_reply({:ok, snapshot}, state) do
     case sync_display(state, snapshot) do
       :ok ->
@@ -434,15 +443,16 @@ defmodule GPUI.Runtime do
     end
   end
 
+  # An idle poll drains nothing; skip the session, which would render every window only
+  # for the result to be dropped.
+  defp apply_display_events(state, []), do: {:ok, [], state}
+
   defp apply_display_events(state, events) do
     case GPUI.Session.dispatch_events(state.session, events) do
       {:ok, handled, snapshot} -> synchronize_display_events(state, events, handled, snapshot)
       {:error, reason} -> {:error, reason, state}
     end
   end
-
-  defp synchronize_display_events(state, [], handled, _snapshot),
-    do: {:ok, handled, record_events(state, handled)}
 
   defp synchronize_display_events(state, _events, handled, snapshot) do
     state = record_events(state, handled)
@@ -514,7 +524,8 @@ defmodule GPUI.Runtime do
     %{state | unsynchronized?: true}
   end
 
-  defp mark_synchronized(state, _snapshot), do: %{state | unsynchronized?: false}
+  defp mark_synchronized(state, snapshot),
+    do: %{state | unsynchronized?: false, synced_snapshot: snapshot}
 
   defp schedule_sync_retry do
     Process.send_after(self(), :retry_display_sync, @sync_retry_interval)

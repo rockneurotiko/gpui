@@ -59,7 +59,11 @@ defmodule GPUI.Codegen.Native.Style.Definitions do
 
   defp style_field_type({:atom_eq, _expected}), do: quote(do: boolean())
   defp style_field_type(:atom_string), do: quote(do: R.option(String.t()))
+  defp style_field_type(:string), do: quote(do: R.option(String.t()))
   defp style_field_type(:color), do: quote(do: R.option(R.u32()))
+
+  defp style_field_type(:shadow_list),
+    do: quote(do: R.option(R.vec(RustQ.Type.path({:gpui_core, :BoxShadowLayer}))))
 
   defp style_field_type(type) when type in [:number, :px, :radius],
     do: quote(do: R.option(R.f32()))
@@ -99,6 +103,8 @@ defmodule GPUI.Codegen.Native.Style.Definitions do
     do: quote(do: atom_eq(term, unquote(to_string(expected))))
 
   defp style_decode_call(:atom_string), do: quote(do: atom_string(term))
+  defp style_decode_call(:string), do: quote(do: string_value(term))
+  defp style_decode_call(:shadow_list), do: quote(do: shadow_list_value(term))
   defp style_decode_call(:color), do: quote(do: color_value(term))
   defp style_decode_call(:number), do: quote(do: number_value(term))
   defp style_decode_call(:px), do: quote(do: px_value(term))
@@ -127,6 +133,24 @@ defmodule GPUI.Codegen.Native.Style.Definitions do
     end
   end
 
+  defp render_statement(%{field: field, render: {:method_if_true, method}}) do
+    style_field = field_access(:style, field)
+
+    quote do
+      if unquote(style_field) do
+        assign!(element, element.unquote(method)())
+      end
+    end
+  end
+
+  defp render_statement(%{field: field, render: :shadow_list}) do
+    render_option_value_case(field, fn ->
+      quote do
+        assign!(element, element.shadow(unquote(shadow_layers())))
+      end
+    end)
+  end
+
   defp render_statement(%{field: field, render: {:enum_methods, values}}) do
     render_option_case(field, values, fn method ->
       quote(do: assign!(element, element.unquote(method)()))
@@ -141,7 +165,7 @@ defmodule GPUI.Codegen.Native.Style.Definitions do
   end
 
   defp render_statement(%{field: field, render: {:option_method, method, unit}})
-       when unit in [:color, :px, :length, :position_length, :flex_basis, :f32] do
+       when unit in [:color, :string, :px, :length, :position_length, :flex_basis, :f32] do
     rendered_value =
       case unit do
         unit when unit in [:f32, :length, :position_length, :flex_basis] ->
@@ -150,6 +174,11 @@ defmodule GPUI.Codegen.Native.Style.Definitions do
         :color ->
           quote do
             GPUI.rgba(value)
+          end
+
+        :string ->
+          quote do
+            GPUI.SharedString.from(value)
           end
 
         unit ->
@@ -168,6 +197,26 @@ defmodule GPUI.Codegen.Native.Style.Definitions do
       |> Enum.map(fn method -> quote(do: assign!(element, element.unquote(method)(value))) end)
       |> then(&{:__block__, [], &1})
     end)
+  end
+
+  defp shadow_layers do
+    quote do
+      value
+      |> into_iter()
+      |> map(fn {x, y, blur, spread, color, inset} ->
+        shadow =
+          GPUI.BoxShadow.new(GPUI.px(x), GPUI.px(y), GPUI.rgba(color).into())
+          |> blur_radius(GPUI.px(blur))
+          |> spread_radius(GPUI.px(spread))
+
+        if inset do
+          shadow.inset()
+        else
+          shadow
+        end
+      end)
+      |> collect()
+    end
   end
 
   defp render_option_value_case(field, render) do

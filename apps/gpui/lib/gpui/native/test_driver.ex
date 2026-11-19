@@ -23,8 +23,8 @@ defmodule GPUI.Native.TestDriver do
 
   (
     @doc "Clicks a target in a deterministic native-test session."
-    def click(id, target) do
-      GPUI.Native.Backend.native_test_click(id, target)
+    def click(id, target, shift, ctrl, meta) do
+      GPUI.Native.Backend.native_test_click(id, target, shift, ctrl, meta)
     end
   )
 
@@ -37,8 +37,8 @@ defmodule GPUI.Native.TestDriver do
 
   (
     @doc "Clicks coordinates in a deterministic native-test session."
-    def click_at(id, x, y) do
-      GPUI.Native.Backend.native_test_click_at(id, x, y)
+    def click_at(id, x, y, shift, ctrl, meta) do
+      GPUI.Native.Backend.native_test_click_at(id, x, y, shift, ctrl, meta)
     end
   )
 
@@ -46,6 +46,27 @@ defmodule GPUI.Native.TestDriver do
     @doc "Scrolls a target in a deterministic native-test session."
     def scroll(id, target, delta_x, delta_y) do
       GPUI.Native.Backend.native_test_scroll(id, target, delta_x, delta_y)
+    end
+  )
+
+  (
+    @doc "Scrolls a target back to its top in a deterministic native-test session."
+    def scroll_to_top(id, target) do
+      GPUI.Native.Backend.native_test_scroll_to_top(id, target)
+    end
+  )
+
+  (
+    @doc "Writes text to the clipboard of a deterministic native-test session."
+    def write_clipboard(id, text) do
+      GPUI.Native.Backend.native_test_write_clipboard(id, text)
+    end
+  )
+
+  (
+    @doc "Reads the clipboard text of a deterministic native-test session."
+    def read_clipboard(id) do
+      GPUI.Native.Backend.native_test_read_clipboard(id)
     end
   )
 

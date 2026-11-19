@@ -43,6 +43,51 @@ defmodule GPUI.Runtime.LifecycleTest do
     end
   end
 
+  defmodule CountingView do
+    use GPUI.View
+
+    @impl GPUI.View
+    def render(assigns) do
+      send(assigns.owner, :rendered)
+
+      ~GPUI"""
+      <div><text>idle</text></div>
+      """
+    end
+  end
+
+  defmodule CountingApp do
+    use GPUI.Application
+
+    @impl GPUI.Application
+    def mount(args), do: {:ok, [window("Counting", do: root(CountingView, owner: args[:owner]))]}
+  end
+
+  test "idle display polls do not render the windows" do
+    start_supervised!(
+      {GPUI.Runtime,
+       app: CountingApp, args: [owner: self()], display: GPUI.Test.Display, poll_interval: 5}
+    )
+
+    Process.sleep(100)
+    {:messages, messages} = Process.info(self(), :messages)
+    assert Enum.count(messages, &(&1 == :rendered)) <= 2
+  end
+
+  test "a message that changes nothing does not render again" do
+    runtime =
+      start_supervised!(
+        {GPUI.Runtime,
+         app: CountingApp, args: [owner: self()], display: GPUI.Test.Display, poll_interval: nil}
+      )
+
+    assert {:ok, _} = GPUI.Runtime.send_view(runtime, 1, :ignored)
+    {:messages, before} = Process.info(self(), :messages)
+    assert {:ok, _} = GPUI.Runtime.send_view(runtime, 1, :ignored)
+    {:messages, later} = Process.info(self(), :messages)
+    assert length(later) == length(before)
+  end
+
   test "exposes stable application identity and runtime topology" do
     runtime =
       start_supervised!(

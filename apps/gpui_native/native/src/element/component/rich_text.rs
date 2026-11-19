@@ -617,6 +617,9 @@ fn apply_run_style(run: &mut gpui::TextRun, source: &RichTextRunNode) {
         Some("oblique") => gpui::FontStyle::Oblique,
         _other => run.font.style,
     };
+    if let Some(family) = &source.font_family {
+        run.font.family = gpui::SharedString::from(family.clone());
+    }
     run.underline = source.underline.map(|color| gpui::UnderlineStyle {
         color: Some(gpui::rgb(color).into()),
         thickness: gpui::px(1.0),
@@ -790,6 +793,7 @@ mod tests {
                 source: rich_run(5, 7, |run| {
                     run.font_weight = Some("light".to_string());
                     run.font_style = Some("oblique".to_string());
+                    run.font_family = Some("monospace".to_string());
                     run.underline = Some(0x010203);
                     run.underline_style = Some("solid".to_string());
                 }),
@@ -813,6 +817,8 @@ mod tests {
         assert!(shaped[1].strikethrough.is_some());
         assert_eq!(shaped[3].font.weight, gpui::FontWeight::LIGHT);
         assert_eq!(shaped[3].font.style, gpui::FontStyle::Oblique);
+        assert_eq!(shaped[3].font.family.as_ref(), "monospace");
+        assert_eq!(shaped[1].font.family, base.font_family);
         assert!(shaped[3]
             .underline
             .as_ref()
@@ -842,6 +848,7 @@ mod tests {
             background: None,
             font_weight: None,
             font_style: None,
+            font_family: None,
             underline: None,
             underline_style: None,
             strikethrough: None,

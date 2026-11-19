@@ -21,6 +21,7 @@ defmodule GPUI.Text.RichRun do
     :background,
     :font_weight,
     :font_style,
+    :font_family,
     :underline,
     :underline_style,
     :strikethrough,
@@ -35,6 +36,7 @@ defmodule GPUI.Text.RichRun do
           background: rgb() | nil,
           font_weight: atom() | nil,
           font_style: atom() | nil,
+          font_family: String.t() | nil,
           underline: rgb() | nil,
           underline_style: underline_style() | nil,
           strikethrough: rgb() | nil,
@@ -54,6 +56,7 @@ defmodule GPUI.Text.RichRun do
     validate_colors!(run)
     validate_font!(run)
     validate_underline!(run)
+    validate_font_family!(run.font_family)
     validate_link!(run.link)
     validate_present!(run)
     :ok
@@ -86,6 +89,19 @@ defmodule GPUI.Text.RichRun do
     end
   end
 
+  defp validate_font_family!(nil), do: :ok
+
+  defp validate_font_family!(family)
+       when is_binary(family) and family != "" and byte_size(family) <= 2_048,
+       do: :ok
+
+  defp validate_font_family!(_family),
+    do:
+      raise(
+        ArgumentError,
+        "rich run font_family must be a non-empty string no larger than 2048 bytes"
+      )
+
   defp validate_link!(nil), do: :ok
 
   defp validate_link!(link)
@@ -102,6 +118,7 @@ defmodule GPUI.Text.RichRun do
            run.background,
            run.font_weight,
            run.font_style,
+           run.font_family,
            run.underline,
            run.strikethrough,
            run.link

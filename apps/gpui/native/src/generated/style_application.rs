@@ -211,6 +211,21 @@ pub fn apply(element: gpui::Div, style: Style) -> gpui::Div {
     if style.truncate {
         element = element.truncate();
     }
+    if style.underline {
+        element = element.underline();
+    }
+    if style.line_through {
+        element = element.line_through();
+    }
+    match style.font_style.as_deref() {
+        Some("italic") => {
+            element = element.italic();
+        }
+        Some("normal") => {
+            element = element.not_italic();
+        }
+        _ => {}
+    };
     match style.cursor.as_deref() {
         Some("default") => {
             element = element.cursor_default();
@@ -247,7 +262,19 @@ pub fn apply(element: gpui::Div, style: Style) -> gpui::Div {
         }
         _ => {}
     };
+    match style.font_family {
+        Some(value) => {
+            element = element.font_family(gpui::SharedString::from(value));
+        }
+        _ => {}
+    };
     match style.font_weight.as_deref() {
+        Some("thin") => {
+            element = element.font_weight(gpui::FontWeight::THIN);
+        }
+        Some("extra_light") => {
+            element = element.font_weight(gpui::FontWeight::EXTRA_LIGHT);
+        }
         Some("light") => {
             element = element.font_weight(gpui::FontWeight::LIGHT);
         }
@@ -262,6 +289,12 @@ pub fn apply(element: gpui::Div, style: Style) -> gpui::Div {
         }
         Some("bold") => {
             element = element.font_weight(gpui::FontWeight::BOLD);
+        }
+        Some("extra_bold") => {
+            element = element.font_weight(gpui::FontWeight::EXTRA_BOLD);
+        }
+        Some("black") => {
+            element = element.font_weight(gpui::FontWeight::BLACK);
         }
         _ => {}
     };
@@ -409,15 +442,90 @@ pub fn apply(element: gpui::Div, style: Style) -> gpui::Div {
         }
         _ => {}
     };
+    match style.border_top_left_radius {
+        Some(value) => {
+            element = element.rounded_tl(gpui::px(value));
+        }
+        _ => {}
+    };
+    match style.border_top_right_radius {
+        Some(value) => {
+            element = element.rounded_tr(gpui::px(value));
+        }
+        _ => {}
+    };
+    match style.border_bottom_left_radius {
+        Some(value) => {
+            element = element.rounded_bl(gpui::px(value));
+        }
+        _ => {}
+    };
+    match style.border_bottom_right_radius {
+        Some(value) => {
+            element = element.rounded_br(gpui::px(value));
+        }
+        _ => {}
+    };
     match style.border_width {
         Some(value) => {
             element = element.border(gpui::px(value));
         }
         _ => {}
     };
+    match style.border_top_width {
+        Some(value) => {
+            element = element.border_t(gpui::px(value));
+        }
+        _ => {}
+    };
+    match style.border_bottom_width {
+        Some(value) => {
+            element = element.border_b(gpui::px(value));
+        }
+        _ => {}
+    };
+    match style.border_left_width {
+        Some(value) => {
+            element = element.border_l(gpui::px(value));
+        }
+        _ => {}
+    };
+    match style.border_right_width {
+        Some(value) => {
+            element = element.border_r(gpui::px(value));
+        }
+        _ => {}
+    };
+    match style.border_style.as_deref() {
+        Some("dashed") => {
+            element = element.border_dashed();
+        }
+        _ => {}
+    };
     match style.border_color {
         Some(value) => {
             element = element.border_color(gpui::rgba(value));
+        }
+        _ => {}
+    };
+    match style.box_shadow {
+        Some(value) => {
+            element = element
+                .shadow(
+                    value
+                        .into_iter()
+                        .map(|(x, y, blur, spread, color, inset)| {
+                            let shadow = gpui::BoxShadow::new(
+                                    gpui::px(x),
+                                    gpui::px(y),
+                                    gpui::rgba(color).into(),
+                                )
+                                .blur_radius(gpui::px(blur))
+                                .spread_radius(gpui::px(spread));
+                            if inset { shadow.inset() } else { shadow }
+                        })
+                        .collect(),
+                );
         }
         _ => {}
     };

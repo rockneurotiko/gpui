@@ -234,5 +234,6 @@ The first generic contract supports `<button>`, low-level `<text_input>`,
 intentionally unsupported.
 
 Use `<text_input>` only for an unlabelled low-level single-line primitive.
-Ordinary forms should prefer `<UI.input>`; revisioned editor and composer
+Ordinary forms should prefer `<UI.input>`, which also provides masked entry
+(`masked: true`); revisioned editor and composer
 surfaces should use `<text_surface>`.

@@ -9,6 +9,13 @@ defmodule GPUI.Codegen.Native.CoreStyle do
     fields = Enum.map(GPUI.Schema.style_specs(), &field/1)
 
     [
+      # x, y, blur, spread, rgba color, inset
+      %AST.TypeAlias{
+        name: :BoxShadowLayer,
+        type:
+          RustQ.Rust.AST.TypeBuilder.tuple([:f32, :f32, :f32, :f32, :u32, :bool]),
+        vis: :pub
+      },
       %AST.Enum{
         name: :Length,
         variants: [
@@ -37,7 +44,11 @@ defmodule GPUI.Codegen.Native.CoreStyle do
 
   defp field_type({:atom_eq, _expected}), do: A.type_path(:bool)
   defp field_type(:atom_string), do: option(A.type_path(:String))
+  defp field_type(:string), do: option(A.type_path(:String))
   defp field_type(:color), do: option(A.type_path(:u32))
+
+  defp field_type(:shadow_list), do: option(A.type_path(:Vec, generics: [A.type_path(:BoxShadowLayer)]))
+
   defp field_type(type) when type in [:number, :px, :radius], do: option(A.type_path(:f32))
 
   defp field_type(type) when type in [:length, :position_length, :flex_basis],

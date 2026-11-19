@@ -291,7 +291,7 @@ defmodule GPUI.Schema.Core do
         motion_from_y: {:default, :number, 0.0}
       ],
       children: false,
-      events: [click: :"phx-click", bounds: :"phx-bounds-change"],
+      events: [click: :"phx-click", bounds: :"phx-bounds-change", scroll: :"phx-scroll"],
       extension: nil,
       kind: :container,
       public_hidden_attrs: [],
@@ -503,6 +503,20 @@ defmodule GPUI.Schema.Core do
       required_events: [],
       stateful: false,
       tag: :img
+    },
+    %{
+      __struct__: GPUI.Schema.Component,
+      attrs: [source: :svg_source, label: :string],
+      children: false,
+      events: [],
+      extension: nil,
+      kind: :svg,
+      public_hidden_attrs: [],
+      public_required_attrs: [],
+      public_slots: [],
+      required_events: [],
+      stateful: false,
+      tag: :svg
     },
     %{
       __struct__: GPUI.Schema.Component,

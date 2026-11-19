@@ -219,6 +219,14 @@ multiple view updates, install the raster once and render a reference:
 Resource references avoid copying the complete pixel payload through each later
 snapshot and work across local and remote displays.
 
+### Inline SVG icons
+
+`<svg source={markup} label="Close" />` renders inline SVG markup (at most 1 MiB)
+as a monochrome mask painted in the element's text colour. It defaults to the
+inherited colour, so `text-*` tints it and `hover:text-*`, `focus:text-*` and
+`focus-within:text-*` recolour it. Size it with `w-*`/`h-*` classes. Source
+colours and gradients are ignored; only the alpha channel is used.
+
 ## Deterministic testing
 
 Renderer-independent helpers exercise application policy without opening native

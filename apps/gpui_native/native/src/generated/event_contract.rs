@@ -4,7 +4,7 @@
 pub(crate) enum NativeEvent {
     #[cfg(feature = "components")]
     Copy { window_id: u64, event: String },
-    Click { window_id: u64, event: String },
+    Click { window_id: u64, event: String, shift: bool, ctrl: bool, meta: bool },
     Command { window_id: u64, event: String },
     Input { kind: InputKind, window_id: u64, event: String, value: Option<EventValue> },
     #[cfg(feature = "components")]
@@ -43,6 +43,8 @@ pub(crate) enum NativeEvent {
     Focus { kind: InputKind, window_id: u64, event: String, id: String },
     #[cfg(feature = "real-gpui")]
     Bounds { window_id: u64, event: String, value: ElementBoundsGeometry },
+    #[cfg(feature = "real-gpui")]
+    Scroll { window_id: u64, event: String, offset_y: f64 },
     #[cfg(feature = "components")]
     ClipboardWrite { window_id: u64, event: String },
     #[cfg(feature = "components")]
@@ -78,8 +80,8 @@ pub(crate) fn encode_native_event<'a>(
         NativeEvent::Copy { window_id, event } => {
             encode_named_event(env, atoms::copy(), window_id, event)
         }
-        NativeEvent::Click { window_id, event } => {
-            encode_named_event(env, atoms::click(), window_id, event)
+        NativeEvent::Click { window_id, event, shift, ctrl, meta } => {
+            encode_click_event(env, window_id, event, shift, ctrl, meta)
         }
         NativeEvent::Command { window_id, event } => {
             encode_named_event(env, atoms::command(), window_id, event)
@@ -160,6 +162,10 @@ pub(crate) fn encode_native_event<'a>(
         #[cfg(feature = "real-gpui")]
         NativeEvent::Bounds { window_id, event, value } => {
             encode_bounds_event(env, window_id, event, value)
+        }
+        #[cfg(feature = "real-gpui")]
+        NativeEvent::Scroll { window_id, event, offset_y } => {
+            encode_scroll_event(env, window_id, event, offset_y)
         }
         #[cfg(feature = "components")]
         NativeEvent::ClipboardWrite { window_id, event } => {

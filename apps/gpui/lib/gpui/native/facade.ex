@@ -34,6 +34,14 @@ defmodule GPUI.Native.Facade do
         apply(GPUI.Native.Backend.module(), :set_app_identity, [_identifier, _name])
       end
 
+      def scroll_to_top(_element_id) do
+        apply(GPUI.Native.Backend.module(), :scroll_to_top, [_element_id])
+      end
+
+      def write_clipboard(_text) do
+        apply(GPUI.Native.Backend.module(), :write_clipboard, [_text])
+      end
+
       def start_runtime() do
         apply(GPUI.Native.Backend.module(), :start_runtime, [])
       end
@@ -75,6 +83,10 @@ defmodule GPUI.Native.Facade do
         apply(GPUI.Native.Backend.module(), :set_theme, [_runtime, _mode])
       end
 
+      def load_fonts(_runtime, _fonts) do
+        apply(GPUI.Native.Backend.module(), :load_fonts, [_runtime, _fonts])
+      end
+
       def put_resource(_runtime, _resource_id, _resource) do
         apply(GPUI.Native.Backend.module(), :put_resource, [_runtime, _resource_id, _resource])
       end
@@ -111,8 +123,14 @@ defmodule GPUI.Native.Facade do
         apply(GPUI.Native.Backend.module(), :native_test_focus, [_session, _target])
       end
 
-      def native_test_click(_session, _target) do
-        apply(GPUI.Native.Backend.module(), :native_test_click, [_session, _target])
+      def native_test_click(_session, _target, _shift, _ctrl, _meta) do
+        apply(GPUI.Native.Backend.module(), :native_test_click, [
+          _session,
+          _target,
+          _shift,
+          _ctrl,
+          _meta
+        ])
       end
 
       def native_test_drag(_session, _from_x, _from_y, _to_x, _to_y) do
@@ -125,8 +143,15 @@ defmodule GPUI.Native.Facade do
         ])
       end
 
-      def native_test_click_at(_session, _x, _y) do
-        apply(GPUI.Native.Backend.module(), :native_test_click_at, [_session, _x, _y])
+      def native_test_click_at(_session, _x, _y, _shift, _ctrl, _meta) do
+        apply(GPUI.Native.Backend.module(), :native_test_click_at, [
+          _session,
+          _x,
+          _y,
+          _shift,
+          _ctrl,
+          _meta
+        ])
       end
 
       def native_test_scroll(_session, _target, _delta_x, _delta_y) do
@@ -136,6 +161,18 @@ defmodule GPUI.Native.Facade do
           _delta_x,
           _delta_y
         ])
+      end
+
+      def native_test_scroll_to_top(_session, _target) do
+        apply(GPUI.Native.Backend.module(), :native_test_scroll_to_top, [_session, _target])
+      end
+
+      def native_test_write_clipboard(_session, _text) do
+        apply(GPUI.Native.Backend.module(), :native_test_write_clipboard, [_session, _text])
+      end
+
+      def native_test_read_clipboard(_session) do
+        apply(GPUI.Native.Backend.module(), :native_test_read_clipboard, [_session])
       end
 
       def native_test_input(_session, _text) do

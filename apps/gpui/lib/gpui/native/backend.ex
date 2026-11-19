@@ -64,6 +64,12 @@ defmodule GPUI.Native.Backend do
   @doc "Sets the process-global native application identity."
   def set_app_identity(identifier, name), do: call(:set_app_identity, [identifier, name])
 
+  @doc "Scrolls the native scroll containers with this element ID back to the top."
+  def scroll_to_top(element_id), do: call(:scroll_to_top, [element_id])
+
+  @doc "Writes text to the native system clipboard."
+  def write_clipboard(text), do: call(:write_clipboard, [text])
+
   @doc "Starts one native runtime namespace."
   def start_runtime, do: call(:start_runtime, [])
 
@@ -93,6 +99,9 @@ defmodule GPUI.Native.Backend do
 
   @doc "Changes the native component theme."
   def set_theme(runtime, mode), do: call(:set_theme, [runtime, mode])
+
+  @doc "Adds font file contents to a native runtime's text system."
+  def load_fonts(runtime, fonts), do: call(:load_fonts, [runtime, fonts])
 
   @doc "Installs a renderer resource in a native runtime."
   def put_resource(runtime, resource_id, resource),
@@ -124,18 +133,31 @@ defmodule GPUI.Native.Backend do
   def native_test_focus(session, target), do: call(:native_test_focus, [session, target])
 
   @doc "Clicks a target in a deterministic native-test session."
-  def native_test_click(session, target), do: call(:native_test_click, [session, target])
+  def native_test_click(session, target, shift, ctrl, meta),
+    do: call(:native_test_click, [session, target, shift, ctrl, meta])
 
   @doc "Drags between native-test coordinates."
   def native_test_drag(session, x1, y1, x2, y2),
     do: call(:native_test_drag, [session, x1, y1, x2, y2])
 
   @doc "Clicks native-test coordinates."
-  def native_test_click_at(session, x, y), do: call(:native_test_click_at, [session, x, y])
+  def native_test_click_at(session, x, y, shift, ctrl, meta),
+    do: call(:native_test_click_at, [session, x, y, shift, ctrl, meta])
 
   @doc "Scrolls a target in a deterministic native-test session."
   def native_test_scroll(session, target, delta_x, delta_y),
     do: call(:native_test_scroll, [session, target, delta_x, delta_y])
+
+  @doc "Scrolls a target back to its top in a deterministic native-test session."
+  def native_test_scroll_to_top(session, target),
+    do: call(:native_test_scroll_to_top, [session, target])
+
+  @doc "Writes text to the clipboard of a deterministic native-test session."
+  def native_test_write_clipboard(session, text),
+    do: call(:native_test_write_clipboard, [session, text])
+
+  @doc "Reads the clipboard text of a deterministic native-test session."
+  def native_test_read_clipboard(session), do: call(:native_test_read_clipboard, [session])
 
   @doc "Types text into the focused deterministic native-test control."
   def native_test_input(session, text), do: call(:native_test_input, [session, text])

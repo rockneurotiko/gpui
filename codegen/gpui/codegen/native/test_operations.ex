@@ -37,11 +37,14 @@ defmodule GPUI.Codegen.Native.TestOperations do
   @spec native_test_click_impl(
           Env.t(R.lifetime(:a)),
           R.resource(NativeTest.NativeTestSessionResource.t()),
-          TargetRequest.t()
+          ClickRequest.t()
         ) :: R.nif_result(term())
   @cfg feature: "native-test"
   defrust native_test_click_impl(env, session, request) do
-    encode_unit_result(env, click(ref(session), request.target))
+    encode_unit_result(
+      env,
+      click(ref(session), request.target, modifiers(request.shift, request.ctrl, request.meta))
+    )
   end
 
   @cfg not: [feature: "native-test"]
@@ -130,7 +133,12 @@ defmodule GPUI.Codegen.Native.TestOperations do
   defrust native_test_click_at_impl(env, session, request) do
     encode_unit_result(
       env,
-      click_at(ref(session), cast(request.x, R.f32()), cast(request.y, R.f32()))
+      click_at(
+        ref(session),
+        cast(request.x, R.f32()),
+        cast(request.y, R.f32()),
+        modifiers(request.shift, request.ctrl, request.meta)
+      )
     )
   end
 
@@ -159,6 +167,53 @@ defmodule GPUI.Codegen.Native.TestOperations do
 
   @cfg not: [feature: "native-test"]
   defrust native_test_scroll_impl(env, _session, _request) do
+    {:ok, {Atoms.error(), "native_test_disabled"}.encode(env)}
+  end
+
+  @spec native_test_scroll_to_top_impl(
+          Env.t(R.lifetime(:a)),
+          R.resource(NativeTest.NativeTestSessionResource.t()),
+          TargetRequest.t()
+        ) :: R.nif_result(term())
+  @cfg feature: "native-test"
+  defrust native_test_scroll_to_top_impl(env, session, request) do
+    encode_unit_result(env, scroll_to_top(ref(session), request.target))
+  end
+
+  @cfg not: [feature: "native-test"]
+  defrust native_test_scroll_to_top_impl(env, _session, _request) do
+    {:ok, {Atoms.error(), "native_test_disabled"}.encode(env)}
+  end
+
+  @spec native_test_write_clipboard_impl(
+          Env.t(R.lifetime(:a)),
+          R.resource(NativeTest.NativeTestSessionResource.t()),
+          String.t()
+        ) :: R.nif_result(term())
+  @cfg feature: "native-test"
+  defrust native_test_write_clipboard_impl(env, session, text) do
+    encode_unit_result(env, write_clipboard(ref(session), text))
+  end
+
+  @cfg not: [feature: "native-test"]
+  defrust native_test_write_clipboard_impl(env, _session, _text) do
+    {:ok, {Atoms.error(), "native_test_disabled"}.encode(env)}
+  end
+
+  @spec native_test_read_clipboard_impl(
+          Env.t(R.lifetime(:a)),
+          R.resource(NativeTest.NativeTestSessionResource.t())
+        ) :: R.nif_result(term())
+  @cfg feature: "native-test"
+  defrust native_test_read_clipboard_impl(env, session) do
+    case read_clipboard(ref(session)) do
+      {:ok, text} -> {:ok, {Atoms.ok(), text}.encode(env)}
+      {:error, reason} -> {:ok, {Atoms.error(), reason}.encode(env)}
+    end
+  end
+
+  @cfg not: [feature: "native-test"]
+  defrust native_test_read_clipboard_impl(env, _session) do
     {:ok, {Atoms.error(), "native_test_disabled"}.encode(env)}
   end
 

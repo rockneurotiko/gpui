@@ -6,8 +6,10 @@ pub(crate) mod component_registry;
 #[cfg(feature = "components")]
 pub(crate) mod controlled;
 pub(crate) mod event;
+#[cfg(feature = "real-gpui")]
+pub(crate) mod scroll;
 
-use event::{apply_click_event, apply_input_events};
+use event::{apply_click_event, apply_input_events, StateColors};
 
 #[cfg(feature = "real-gpui")]
 pub(crate) struct ElementRenderContext<'a, 'cx> {
@@ -43,6 +45,7 @@ impl ElementNode {
             children: Vec::new(),
             click: None,
             bounds_change: None,
+            scroll: None,
             focus_request: 0,
             focus: None,
             blur: None,
@@ -71,6 +74,12 @@ impl ElementNode {
                 format!("{}-image-{element_id}", context.id_namespace),
                 context.runtime.clone(),
                 context.window_id,
+            ),
+            Self::Svg(node) => render_svg_primitive(
+                node.source,
+                node.style,
+                node.label,
+                format!("{}-svg-{element_id}", context.id_namespace),
             ),
             Self::Input(input) => render_input_primitive(element_id, input, context),
             Self::AnchoredLayer(layer) => render_anchored_layer_primitive(layer, context),
@@ -305,9 +314,55 @@ pub(crate) fn render_viewport_primitive(
         .into_any_element()
 }
 
+/// Applies a CSS-like `text-transform`; unknown values (including "none") leave the text as is.
+fn transform_text(text: &str, transform: &str) -> String {
+    match transform {
+        "uppercase" => text.to_uppercase(),
+        "lowercase" => text.to_lowercase(),
+        "capitalize" => {
+            let mut at_word_start = true;
+            text.chars()
+                .map(|c| {
+                    let out = if at_word_start {
+                        c.to_uppercase().collect::<String>()
+                    } else {
+                        c.to_string()
+                    };
+                    at_word_start = c.is_whitespace();
+                    out
+                })
+                .collect()
+        }
+        _ => text.to_string(),
+    }
+}
+
+#[cfg(test)]
+mod transform_text_tests {
+    use super::transform_text;
+
+    #[test]
+    fn maps_each_transform() {
+        assert_eq!(transform_text("héllo World", "uppercase"), "HÉLLO WORLD");
+        assert_eq!(transform_text("HÉLLO World", "lowercase"), "héllo world");
+        assert_eq!(
+            transform_text("hello wORLD  éa", "capitalize"),
+            "Hello WORLD  Éa"
+        );
+        assert_eq!(transform_text("", "capitalize"), "");
+        assert_eq!(transform_text("ß", "uppercase"), "SS");
+        assert_eq!(transform_text("abc", "none"), "abc");
+    }
+}
+
 #[cfg(feature = "real-gpui")]
 pub(crate) fn render_text_primitive(text: String, style: StyleAttrs) -> gpui::AnyElement {
     use gpui::{div, IntoElement, ParentElement};
+
+    let text = match style.text_transform.as_deref() {
+        Some(transform) => transform_text(&text, transform),
+        None => text,
+    };
 
     apply_generated_render_styles(div(), style)
         .child(text)
@@ -353,6 +408,67 @@ pub(crate) fn render_image_primitive(
     let mut element = apply_generated_render_styles(div(), style)
         .child(image)
         .id(element_id);
+    if let Some(label) = label {
+        element = element.role(Role::Image).aria_label(label);
+    }
+    element.into_any_element()
+}
+
+/// Paints inline SVG markup as an alpha mask in the inherited text colour, so `text-*` and the
+/// hover/focus colour states on the wrapper recolour the icon.
+#[cfg(feature = "real-gpui")]
+pub(crate) fn render_svg_primitive(
+    source: String,
+    style: StyleAttrs,
+    label: Option<String>,
+    element_id: String,
+) -> gpui::AnyElement {
+    use gpui::{
+        canvas, div, Hsla, InteractiveElement, IntoElement, ParentElement, Role,
+        StatefulInteractiveElement, Styled,
+    };
+    use std::hash::{Hash, Hasher};
+
+    let hover = StateColors::from_style(&style);
+    let active = StateColors::from_active(&style);
+    let focus = StateColors::from_focus(&style);
+    let focus_within = StateColors::from_focus_within(&style);
+
+    let mut hasher = std::collections::hash_map::DefaultHasher::new();
+    source.hash(&mut hasher);
+    let cache_key = gpui::SharedString::from(format!("__inline_svg__{}", hasher.finish()));
+
+    let icon = canvas(
+        |_bounds, _window, _cx| {},
+        move |bounds, (), window, cx| {
+            let color: Hsla = window.text_style().color;
+            let _ = window.paint_svg(
+                bounds,
+                cache_key,
+                Some(source.as_bytes()),
+                Default::default(),
+                color,
+                cx,
+            );
+        },
+    )
+    .size_full();
+
+    let mut element = apply_generated_render_styles(div(), style)
+        .child(icon)
+        .id(element_id);
+    if !hover.is_empty() {
+        element = element.hover(move |style| hover.apply(style));
+    }
+    if !active.is_empty() {
+        element = element.active(move |style| active.apply(style));
+    }
+    if !focus.is_empty() {
+        element = element.focus(move |style| focus.apply(style));
+    }
+    if !focus_within.is_empty() {
+        element = element.in_focus(move |style| focus_within.apply(style));
+    }
     if let Some(label) = label {
         element = element.role(Role::Image).aria_label(label);
     }
@@ -483,10 +599,18 @@ pub(crate) fn render_input_primitive(
     } = input_node;
     let runtime = context.runtime.clone();
     let window_id = context.window_id;
-    let input_id = format!(
-        "gpui-elixir-input-{window_id}-{}-{element_id}",
-        context.id_namespace
-    );
+    // Element numbers shift whenever the tree above changes, which would replace the input
+    // and drop its focus and selection, so an input with an id is keyed by that id.
+    let input_id = match &stable_id {
+        Some(id) => format!(
+            "gpui-elixir-input-{window_id}-{}-id-{id}",
+            context.id_namespace
+        ),
+        None => format!(
+            "gpui-elixir-input-{window_id}-{}-{element_id}",
+            context.id_namespace
+        ),
+    };
     let focus_enabled = focus_request > 0 || focus.is_some() || blur.is_some();
     let public_id = stable_id.unwrap_or_else(|| input_id.clone());
     if focus_enabled {
@@ -552,7 +676,19 @@ pub(crate) fn render_input_primitive(
         );
     }
 
-    let element = apply_generated_render_styles(div(), style).child(input);
+    // The input's box takes its focus colours while the input has the focus. The input is a
+    // view of its own that tracks the handle, so this is decided here rather than by the box.
+    let states = [
+        StateColors::from_focus(&style),
+        StateColors::from_focus_within(&style),
+    ];
+    let mut element = apply_generated_render_styles(div(), style);
+    if focus_handle.is_focused(context.window) {
+        states
+            .into_iter()
+            .for_each(|colors| colors.refine(&mut element));
+    }
+    let element = element.child(input);
     apply_input_events(element, input_id, keydown, keyup, runtime, window_id)
 }
 
@@ -800,6 +936,7 @@ pub(crate) fn render_container_primitive(
         children,
         click,
         bounds_change,
+        scroll,
         focus_request,
         focus,
         blur,
@@ -815,6 +952,11 @@ pub(crate) fn render_container_primitive(
     } = node;
     let runtime = context.runtime.clone();
     let window_id = context.window_id;
+    let hover = StateColors::from_style(&style);
+    let active = StateColors::from_active(&style);
+    let focus_colors = StateColors::from_focus(&style);
+    let focus_within = StateColors::from_focus_within(&style);
+    let focus_visible = StateColors::from_focus_visible(&style);
     let mut element = apply_generated_render_styles(div(), style);
     element = apply_container_semantics(element, tag);
 
@@ -889,12 +1031,45 @@ pub(crate) fn render_container_primitive(
         accessibility.role = Some(AccessibilityRole::Button);
     }
 
-    if focus_request > 0 || focus.is_some() || blur.is_some() {
+    let focus_contract = focus_request > 0 || focus.is_some() || blur.is_some();
+    if focus_contract {
         let id = stable_id
             .clone()
             .expect("focus-enabled containers require stable IDs");
         element = apply_focus_contract(element, id, focus_request, focus, blur, true, context);
     }
+
+    // GPUI's `in_focus` styles an element inside the focused one, the reverse of CSS
+    // focus-within. A plain box (a field around an input) tracks a handle of its own to see
+    // whether it contains the focus, and never takes the focus: a click on its padding must
+    // leave the input focused.
+    let focus_within = if !focus_contract
+        && click.is_none()
+        && focus_colors.is_empty()
+        && !focus_within.is_empty()
+    {
+        let key = stable_id
+            .clone()
+            .unwrap_or_else(|| format!("{}-{element_id}", context.id_namespace));
+        let handle = context
+            .window
+            .use_keyed_state(format!("{key}-focus-within"), context.cx, |_, cx| {
+                cx.focus_handle()
+            })
+            .read(context.cx)
+            .clone();
+        if handle.contains_focused(context.window, context.cx) {
+            focus_within.refine(&mut element);
+        }
+        element = element
+            .track_focus(&handle)
+            .on_mouse_down(gpui::MouseButton::Left, |_event, window, _cx| {
+                window.prevent_default()
+            });
+        StateColors::default()
+    } else {
+        focus_within
+    };
 
     if tag == GeneratedElementTag::Scroll {
         let scroll_id = stable_id.clone().unwrap_or_else(|| {
@@ -903,17 +1078,43 @@ pub(crate) fn render_container_primitive(
                 context.id_namespace
             )
         });
-        let element = element.id(scroll_id.clone()).overflow_y_scroll();
+        let debug_selector = scroll_id.clone();
+        let mut element = element
+            .debug_selector(|| debug_selector)
+            .id(scroll_id.clone())
+            .overflow_y_scroll();
+        // Only containers with a stable ID (or a scroll subscription) keep a handle; the rest
+        // scroll with GPUI's own per-element state as before.
+        if let Some(tracked) = (stable_id.is_some() || scroll.is_some())
+            .then(|| scroll::entry(window_id, &scroll_id))
+            .flatten()
+        {
+            element = element.track_scroll(&tracked.handle);
+            if let Some(event) = scroll {
+                use gpui::Styled;
+
+                let runtime_for_scroll = runtime.clone();
+                element = element.child(
+                    gpui::canvas(
+                        move |_bounds, _window, cx| {
+                            scroll::observe(&tracked, &runtime_for_scroll, window_id, &event, cx);
+                        },
+                        |_bounds, _prepaint, _window, _cx| {},
+                    )
+                    .absolute()
+                    .inset_0(),
+                );
+            }
+        }
         let element = apply_window_control(element, window_control, runtime.clone(), window_id);
         let element = if let Some(event) = click {
             let runtime_for_click = runtime.clone();
-            element.on_click(move |_event, _window, _cx| {
-                let _ = push_event(
+            element.on_click(move |click, _window, _cx| {
+                event::emit_modified_click_event(
                     &runtime_for_click,
-                    NativeEvent::Click {
-                        window_id,
-                        event: event.clone(),
-                    },
+                    window_id,
+                    &event,
+                    click.modifiers(),
                 );
             })
         } else {
@@ -933,6 +1134,11 @@ pub(crate) fn render_container_primitive(
             window_id,
             element_motion,
             window_control,
+            hover,
+            active,
+            focus_colors,
+            focus_within,
+            focus_visible,
         )
     }
 }

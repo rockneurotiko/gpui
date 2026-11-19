@@ -11,9 +11,12 @@ defmodule GPUI.Codegen.Native.TestBoundaryTest do
         native_test_resize: 3,
         native_test_bounds: 2,
         native_test_focus: 2,
-        native_test_click: 2,
-        native_test_click_at: 3,
+        native_test_click: 5,
+        native_test_click_at: 6,
         native_test_scroll: 4,
+        native_test_scroll_to_top: 2,
+        native_test_write_clipboard: 2,
+        native_test_read_clipboard: 1,
         native_test_input: 2,
         native_test_key: 2,
         native_test_advance: 2,
@@ -67,8 +70,12 @@ defmodule GPUI.Codegen.Native.TestBoundaryTest do
     assert source =~ "native_test_resize_impl(env, session, resize_request(width, height))"
     assert source =~ "native_test_bounds_impl(env, session, target_request(target))"
     assert source =~ "native_test_focus_impl(env, session, target_request(target))"
-    assert source =~ "native_test_click_impl(env, session, target_request(target))"
-    assert source =~ "native_test_click_at_impl(env, session, point_request(x, y))"
+
+    assert source =~
+             "native_test_click_impl(env, session, click_request(target, shift, ctrl, meta))"
+
+    assert source =~
+             "native_test_click_at_impl(env, session, point_request(x, y, shift, ctrl, meta))"
 
     assert source =~
              "native_test_scroll_impl(env, session, scroll_request(target, delta_x, delta_y))"

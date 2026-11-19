@@ -269,6 +269,7 @@ impl gpui::Render for ElixirRoot {
         let mut active_input_ids = HashSet::new();
         #[cfg(feature = "components")]
         self.components.begin_render();
+        crate::element::scroll::begin_frame(self.window_id);
         let element = tree.render(&mut ElementRenderContext {
             runtime: self.runtime.clone(),
             window_id: self.window_id,
@@ -281,6 +282,7 @@ impl gpui::Render for ElixirRoot {
             window: _window,
             cx,
         });
+        crate::element::scroll::end_frame(self.window_id);
         self.input_entities
             .retain(|input_id, _entity| active_input_ids.contains(input_id));
         #[cfg(feature = "components")]
@@ -470,8 +472,19 @@ pub(crate) enum WindowCommand {
         name: String,
         reply: WindowCommandReply,
     },
+    ScrollToTop {
+        element_id: String,
+    },
+    WriteClipboard {
+        text: String,
+        reply: WindowCommandReply,
+    },
     SetTheme {
         mode: NativeThemeMode,
+        reply: WindowCommandReply,
+    },
+    LoadFonts {
+        fonts: Vec<Vec<u8>>,
         reply: WindowCommandReply,
     },
     PlatformClosed {
@@ -562,6 +575,7 @@ fn handle_window_command(
             let key = (runtime_id, window_id);
             if let Some(window) = windows.remove(&key) {
                 let _ = close_managed_window(window, cx);
+                crate::element::scroll::drop_window(window_id);
             }
 
             let result = open_gpui_window(
@@ -576,6 +590,7 @@ fn handle_window_command(
                     close_request,
                     focus,
                     blur,
+                    app_id: identity.as_ref().map(|(id, _)| id.clone()),
                 },
                 window_state.clone(),
                 runtime.clone(),
@@ -661,13 +676,76 @@ fn handle_window_command(
             };
             send_reply(reply, result);
         }
+        WindowCommand::ScrollToTop { element_id } => {
+            crate::element::scroll::scroll_to_top(&element_id);
+            cx.refresh_windows();
+        }
+        WindowCommand::WriteClipboard { text, reply } => {
+            cx.write_to_clipboard(gpui::ClipboardItem::new_string(text));
+            send_reply(reply, Ok(()));
+        }
         WindowCommand::SetTheme { mode, reply } => {
             let result = set_component_theme(mode, windows, cx);
+            send_reply(reply, result);
+        }
+        WindowCommand::LoadFonts { fonts, reply } => {
+            let result = load_fonts(fonts, cx);
             send_reply(reply, result);
         }
         WindowCommand::PlatformClosed { platform_id } => {
             handle_platform_window_closed(windows, platform_id);
         }
+    }
+}
+
+/// Registers font data once per distinct content: the text system appends every
+/// call's faces, so repeated loads (for example a restarted display) are skipped.
+fn load_fonts(fonts: Vec<Vec<u8>>, cx: &mut gpui::App) -> Result<(), String> {
+    use std::hash::{Hash, Hasher};
+
+    static LOADED: std::sync::LazyLock<Mutex<std::collections::HashSet<u64>>> =
+        std::sync::LazyLock::new(Default::default);
+    let mut loaded = LOADED
+        .lock()
+        .map_err(|_| "fonts_lock_poisoned".to_string())?;
+    let mut hashes = Vec::new();
+    let fresh: Vec<_> = fonts
+        .into_iter()
+        .filter(|data| {
+            let mut hasher = std::collections::hash_map::DefaultHasher::new();
+            data.hash(&mut hasher);
+            let hash = hasher.finish();
+            let is_new = !loaded.contains(&hash) && !hashes.contains(&hash);
+            if is_new {
+                hashes.push(hash);
+            }
+            is_new
+        })
+        .map(std::borrow::Cow::Owned)
+        .collect();
+    // Hashes are recorded only after a successful load so a failure can be retried.
+    cx.text_system()
+        .add_fonts(fresh)
+        .map_err(|error| error.to_string())?;
+    loaded.extend(hashes);
+    Ok(())
+}
+
+/// gpui-component sizes its widgets in rems and takes the rem from its theme's font size. That
+/// follows the font size of the window's root element, as in CSS, so the widgets grow with the
+/// app's text; without one it is the default 16px.
+#[cfg(feature = "components")]
+fn sync_component_font_size(tree: &ElementNode, cx: &mut gpui::App) {
+    fn root_font_size(node: &ElementNode) -> Option<f32> {
+        match node {
+            ElementNode::Viewport(viewport) => viewport.children.first().and_then(root_font_size),
+            ElementNode::Div(node) => node.style.font_size,
+            _ => None,
+        }
+    }
+    let font_size = gpui::px(root_font_size(tree).unwrap_or(16.0));
+    if gpui_component::Theme::global(cx).font_size != font_size {
+        gpui_component::Theme::global_mut(cx).font_size = font_size;
     }
 }
 
@@ -711,6 +789,7 @@ fn handle_platform_window_closed(
 
     if let Some(key) = key {
         if let Some(window) = windows.remove(&key) {
+            crate::element::scroll::drop_window(key.1);
             let _ = push_event(
                 &window.runtime,
                 NativeEvent::WindowClosed { window_id: key.1 },
@@ -734,6 +813,8 @@ fn update_gpui_window(
     let window = windows
         .get(&key)
         .ok_or_else(|| "unknown_window".to_string())?;
+    #[cfg(feature = "components")]
+    sync_component_font_size(&tree, cx);
     *window
         .state
         .tree
@@ -829,6 +910,7 @@ fn close_gpui_window(
         .remove(&key)
         .ok_or_else(|| "unknown_window".to_string())?;
     let runtime = window.runtime.clone();
+    crate::element::scroll::drop_window(key.1);
     close_managed_window(window, cx)?;
     push_event(&runtime, NativeEvent::WindowClosed { window_id: key.1 })
         .map_err(|_error| "runtime_lock_failed".to_string())
@@ -856,6 +938,7 @@ struct WindowOpenConfig {
     close_request: bool,
     focus: bool,
     blur: bool,
+    app_id: Option<String>,
 }
 
 #[cfg(feature = "real-gpui")]
@@ -887,9 +970,18 @@ fn open_gpui_window(
         close_request,
         focus,
         blur,
+        app_id,
     } = config;
-    let bounds = Bounds::centered(None, size(px(width), px(height)), cx);
-    let window_min_size = min_size.map(|(width, height)| size(px(width), px(height)));
+    // Sizes larger than the screen (an app scaled up for readability) are fitted to it.
+    let screen = cx
+        .primary_display()
+        .map(|display| display.visible_bounds().size);
+    let fit = |width: f32, height: f32| match screen {
+        Some(screen) => size(px(width).min(screen.width), px(height).min(screen.height)),
+        None => size(px(width), px(height)),
+    };
+    let bounds = Bounds::centered(None, fit(width, height), cx);
+    let window_min_size = min_size.map(|(width, height)| fit(width, height));
     let titlebar = content_chrome.then(|| TitlebarOptions {
         title: Some(title.clone().into()),
         appears_transparent: true,
@@ -916,6 +1008,7 @@ fn open_gpui_window(
                 titlebar,
                 app_owns_titlebar_drag: content_chrome,
                 window_decorations,
+                app_id,
                 ..Default::default()
             },
             |native_window, cx| {

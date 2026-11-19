@@ -35,6 +35,7 @@ defmodule GPUI.Codegen.Native.Elements do
           required(:children) => R.vec(ElementNode.t()),
           required(:click) => R.option(String.t()),
           required(:bounds_change) => R.option(String.t()),
+          required(:scroll) => R.option(String.t()),
           required(:focus_request) => R.u64(),
           required(:focus) => R.option(String.t()),
           required(:blur) => R.option(String.t()),
@@ -69,6 +70,12 @@ defmodule GPUI.Codegen.Native.Elements do
           required(:label) => R.option(String.t())
         }
 
+  @type svg_node :: %{
+          required(:source) => String.t(),
+          required(:style) => StyleAttrs.t(),
+          required(:label) => R.option(String.t())
+        }
+
   @type text_node :: %{
           required(:text) => String.t(),
           required(:style) => StyleAttrs.t()
@@ -94,6 +101,7 @@ defmodule GPUI.Codegen.Native.Elements do
           required(:background) => R.option(R.u32()),
           required(:font_weight) => R.option(String.t()),
           required(:font_style) => R.option(String.t()),
+          required(:font_family) => R.option(String.t()),
           required(:underline) => R.option(R.u32()),
           required(:underline_style) => R.option(String.t()),
           required(:strikethrough) => R.option(R.u32()),
@@ -257,6 +265,7 @@ defmodule GPUI.Codegen.Native.Elements do
          children: unwrap!(decode_children(term)),
          click: string_attr(term, Atoms.phx_click()),
          bounds_change: string_attr(term, Atoms.phx_bounds_change()),
+         scroll: string_attr(term, Atoms.phx_scroll()),
          focus_request:
            unwrap!(component_non_negative_integer_attr(term, Atoms.focus_request())).unwrap_or(0),
          focus: string_attr(term, Atoms.phx_focus()),
@@ -338,6 +347,25 @@ defmodule GPUI.Codegen.Native.Elements do
        :image,
        struct_literal(ImageNode,
          image: image,
+         style: unwrap!(decode_style(term)),
+         label: non_empty_string_attr(term, Atoms.label())
+       )
+     )}
+  end
+
+  @allow Clippy.redundant_field_names()
+  @spec decode_svg_node(term(), GeneratedElementTag.t()) ::
+          R.nif_result(ElementNode.t())
+  defrust decode_svg_node(term, _tag) do
+    attrs = unwrap!(decode_element_attrs(term))
+    source = decode_as!(attrs.map_get(Atoms.source()), String.t())
+
+    {:ok,
+     enum_variant(
+       ElementNode,
+       :svg,
+       struct_literal(SvgNode,
+         source: source,
          style: unwrap!(decode_style(term)),
          label: non_empty_string_attr(term, Atoms.label())
        )
@@ -553,6 +581,7 @@ defmodule GPUI.Codegen.Native.Elements do
             :container_node,
             :anchored_layer_node,
             :image_node,
+            :svg_node,
             :text_node,
             :input_node
           ],

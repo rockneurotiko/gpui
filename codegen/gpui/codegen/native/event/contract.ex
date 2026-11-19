@@ -10,10 +10,12 @@ defmodule GPUI.Codegen.Native.Event.Contract do
     named = [window_id: quote(do: RustQ.Type.u64()), event: quote(do: String.t())]
     window = [window_id: quote(do: RustQ.Type.u64())]
     value = quote(do: RustQ.Type.option(EventValue.t()))
+    modifiers = [shift: quote(do: boolean()), ctrl: quote(do: boolean()), meta: quote(do: boolean())]
 
     [
       {:Copy, "components", named, :encode_named_event, [:env, atom(:copy), :window_id, :event]},
-      {:Click, nil, named, :encode_named_event, [:env, atom(:click), :window_id, :event]},
+      {:Click, nil, named ++ modifiers, :encode_click_event,
+       [:env, :window_id, :event, :shift, :ctrl, :meta]},
       {:Command, nil, named, :encode_named_event, [:env, atom(:command), :window_id, :event]},
       {:Input, nil, [kind: quote(do: InputKind.t())] ++ named ++ [value: value],
        :encode_input_event, [:env, A.ref(:kind), :window_id, :event, :value]}
@@ -25,6 +27,8 @@ defmodule GPUI.Codegen.Native.Event.Contract do
          :encode_focus_event, [:env, A.ref(:kind), :window_id, :event, :id]},
         {:Bounds, "real-gpui", named ++ [value: quote(do: ElementBoundsGeometry.t())],
          :encode_bounds_event, [:env, :window_id, :event, :value]},
+        {:Scroll, "real-gpui", named ++ [offset_y: quote(do: RustQ.Type.f64())],
+         :encode_scroll_event, [:env, :window_id, :event, :offset_y]},
         {:ClipboardWrite, "components", named, :encode_named_event,
          [:env, atom(:clipboard_write), :window_id, :event]},
         {:ClipboardRead, "components", named ++ [payload: quote(do: TransferPayload.t())],

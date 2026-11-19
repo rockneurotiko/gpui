@@ -44,9 +44,10 @@ defmodule GPUI.Test.NativeSession do
   @spec press(UI.t(), atom() | String.t()) :: UI.t()
   def press(%UI{} = ui, key), do: call(ui, {:press, key!(key)})
 
-  @spec click(UI.t(), String.t() | {number(), number()}) :: UI.t()
-  def click(%UI{} = ui, {x, y}), do: call(ui, {:click, point!({x, y})})
-  def click(%UI{} = ui, target), do: call(ui, {:click, target!(target)})
+  @spec click(UI.t(), String.t() | {number(), number()}, [:shift | :ctrl | :meta]) :: UI.t()
+  def click(ui, target, modifiers \\ [])
+  def click(%UI{} = ui, {x, y}, mods), do: call(ui, {:click, point!({x, y}), modifiers!(mods)})
+  def click(%UI{} = ui, target, mods), do: call(ui, {:click, target!(target), modifiers!(mods)})
 
   def drag(%UI{} = ui, from, to), do: call(ui, {:drag, point!(from), point!(to)})
 
@@ -54,8 +55,17 @@ defmodule GPUI.Test.NativeSession do
   def scroll(%UI{} = ui, target, opts),
     do: call(ui, {:scroll, target!(target), scroll_opts!(opts)})
 
+  @spec scroll_to_top(UI.t(), String.t()) :: UI.t()
+  def scroll_to_top(%UI{} = ui, target), do: call(ui, {:scroll_to_top, target!(target)})
+
   @spec type(UI.t(), String.t()) :: UI.t()
   def type(%UI{} = ui, text), do: call(ui, {:type, text!(text)})
+
+  @spec write_clipboard(UI.t(), String.t()) :: UI.t()
+  def write_clipboard(%UI{} = ui, text), do: call(ui, {:write_clipboard, text!(text)})
+
+  @spec read_clipboard(UI.t()) :: String.t()
+  def read_clipboard(%UI{} = ui), do: call(ui, {:read_clipboard})
 
   @spec resize(UI.t(), {number(), number()}) :: UI.t()
   def resize(%UI{} = ui, size), do: call(ui, {:resize, size!(size)})
@@ -93,12 +103,18 @@ defmodule GPUI.Test.NativeSession do
   def handle_call({:press, ref, key}, _from, %{ref: ref} = state),
     do: reply(state, :press, key, NativeTest.press(state.session, keystroke(key)))
 
-  def handle_call({:click, ref, {x, y}}, _from, %{ref: ref} = state)
+  def handle_call({:click, ref, {x, y}, {shift, ctrl, meta}}, _from, %{ref: ref} = state)
       when is_number(x) and is_number(y),
-      do: reply(state, :click, {x, y}, NativeTest.click_at(state.session, x, y))
+      do:
+        reply(
+          state,
+          :click,
+          {x, y},
+          NativeTest.click_at(state.session, x, y, shift, ctrl, meta)
+        )
 
-  def handle_call({:click, ref, target}, _from, %{ref: ref} = state),
-    do: reply(state, :click, target, NativeTest.click(state.session, target))
+  def handle_call({:click, ref, target, {shift, ctrl, meta}}, _from, %{ref: ref} = state),
+    do: reply(state, :click, target, NativeTest.click(state.session, target, shift, ctrl, meta))
 
   def handle_call({:drag, ref, {x1, y1} = from, {x2, y2} = to}, _from, %{ref: ref} = state),
     do: reply(state, :drag, {from, to}, NativeTest.drag(state.session, x1, y1, x2, y2))
@@ -114,8 +130,21 @@ defmodule GPUI.Test.NativeSession do
     )
   end
 
+  def handle_call({:scroll_to_top, ref, target}, _from, %{ref: ref} = state),
+    do: reply(state, :scroll_to_top, target, NativeTest.scroll_to_top(state.session, target))
+
   def handle_call({:type, ref, text}, _from, %{ref: ref} = state),
     do: reply(state, :type, text, NativeTest.input(state.session, text))
+
+  def handle_call({:write_clipboard, ref, text}, _from, %{ref: ref} = state),
+    do: reply(state, :write_clipboard, text, NativeTest.write_clipboard(state.session, text))
+
+  def handle_call({:read_clipboard, ref}, _from, %{ref: ref} = state) do
+    case native_result(state, :read_clipboard, nil, NativeTest.read_clipboard(state.session)) do
+      {:ok, text} -> {:reply, text, state}
+      {:error, error} -> {:reply, {:error, error}, state}
+    end
+  end
 
   def handle_call({:resize, ref, {width, height}}, _from, %{ref: ref} = state)
       when is_number(width) and is_number(height) and width > 0 and height > 0,
@@ -236,6 +265,20 @@ defmodule GPUI.Test.NativeSession do
 
   defp target!(target),
     do: raise(ArgumentError, "expected target ID to be a string, got: #{inspect(target)}")
+
+  defp modifiers!(modifiers) when is_list(modifiers) do
+    case Enum.uniq(modifiers) -- [:shift, :ctrl, :meta] do
+      [] ->
+        {:shift in modifiers, :ctrl in modifiers, :meta in modifiers}
+
+      _unknown ->
+        raise ArgumentError,
+              "expected click modifiers from [:shift, :ctrl, :meta], got: #{inspect(modifiers)}"
+    end
+  end
+
+  defp modifiers!(modifiers),
+    do: raise(ArgumentError, "expected click modifiers to be a list, got: #{inspect(modifiers)}")
 
   defp point!({x, y} = point) do
     if finite_number?(x) and finite_number?(y) and abs(x) <= @max_coordinate and

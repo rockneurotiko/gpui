@@ -18,6 +18,7 @@ defmodule GPUI.Schema.Component do
 
   @type scalar_type ::
           :string
+          | :svg_source
           | :accessibility_label
           | :accessibility_description
           | :accessibility_value

@@ -28,6 +28,37 @@ defmodule GPUI.Test.Native.ControlsTest do
     assert_receive {:gpui, ^ui, {:event, %{type: :change, event: "toggle", value: false}}}
   end
 
+  defmodule ModifierClickView do
+    use GPUI.View
+
+    @impl GPUI.View
+    def render(_assigns) do
+      ~GPUI"""
+      <div class="flex flex-col gap-4">
+        <GPUI.UI.button id="modified-button" label="Button" phx-click="button" />
+        <div id="modified-div" phx-click="div" class="w-24 h-8">Div</div>
+      </div>
+      """
+    end
+  end
+
+  for target <- ["modified-button", "modified-div"],
+      {held, flags} <- [
+        {[], %{shift: false, ctrl: false, meta: false}},
+        {[:shift], %{shift: true, ctrl: false, meta: false}},
+        {[:ctrl], %{shift: false, ctrl: true, meta: false}},
+        {[:meta], %{shift: false, ctrl: false, meta: true}}
+      ] do
+    test "click on #{target} holding #{inspect(held)} reports exactly those modifiers", %{ui: ui} do
+      render(ui, ModifierClickView, [])
+      settle(ui)
+      click(ui, unquote(target), unquote(held))
+      flags = unquote(Macro.escape(flags))
+      assert_receive {:gpui, ^ui, {:event, %{type: :click} = event}}
+      assert Map.take(event, [:shift, :ctrl, :meta]) == flags
+    end
+  end
+
   defmodule InputView do
     use GPUI.View
 

@@ -23,9 +23,13 @@ pub(crate) fn native_test_focus_impl<'a>(
 pub(crate) fn native_test_click_impl<'a>(
     env: Env<'a>,
     session: ResourceArc<native_test::NativeTestSessionResource>,
-    request: TargetRequest,
+    request: ClickRequest,
 ) -> NifResult<Term<'a>> {
-    match click(&session, request.target) {
+    match click(
+        &session,
+        request.target,
+        modifiers(request.shift, request.ctrl, request.meta),
+    ) {
         Ok(_unit) => Ok((atoms::ok(), atoms::ok()).encode(env)),
         Err(reason) => Ok((atoms::error(), reason).encode(env)),
     }
@@ -34,7 +38,7 @@ pub(crate) fn native_test_click_impl<'a>(
 pub(crate) fn native_test_click_impl<'a>(
     env: Env<'a>,
     _session: ResourceArc<native_test::NativeTestSessionResource>,
-    _request: TargetRequest,
+    _request: ClickRequest,
 ) -> NifResult<Term<'a>> {
     Ok((atoms::error(), "native_test_disabled").encode(env))
 }
@@ -126,7 +130,12 @@ pub(crate) fn native_test_click_at_impl<'a>(
     session: ResourceArc<native_test::NativeTestSessionResource>,
     request: PointRequest,
 ) -> NifResult<Term<'a>> {
-    match click_at(&session, request.x as f32, request.y as f32) {
+    match click_at(
+        &session,
+        request.x as f32,
+        request.y as f32,
+        modifiers(request.shift, request.ctrl, request.meta),
+    ) {
         Ok(_unit) => Ok((atoms::ok(), atoms::ok()).encode(env)),
         Err(reason) => Ok((atoms::error(), reason).encode(env)),
     }
@@ -160,6 +169,61 @@ pub(crate) fn native_test_scroll_impl<'a>(
     env: Env<'a>,
     _session: ResourceArc<native_test::NativeTestSessionResource>,
     _request: ScrollRequest,
+) -> NifResult<Term<'a>> {
+    Ok((atoms::error(), "native_test_disabled").encode(env))
+}
+#[cfg(feature = "native-test")]
+pub(crate) fn native_test_scroll_to_top_impl<'a>(
+    env: Env<'a>,
+    session: ResourceArc<native_test::NativeTestSessionResource>,
+    request: TargetRequest,
+) -> NifResult<Term<'a>> {
+    match scroll_to_top(&session, request.target) {
+        Ok(_unit) => Ok((atoms::ok(), atoms::ok()).encode(env)),
+        Err(reason) => Ok((atoms::error(), reason).encode(env)),
+    }
+}
+#[cfg(not(feature = "native-test"))]
+pub(crate) fn native_test_scroll_to_top_impl<'a>(
+    env: Env<'a>,
+    _session: ResourceArc<native_test::NativeTestSessionResource>,
+    _request: TargetRequest,
+) -> NifResult<Term<'a>> {
+    Ok((atoms::error(), "native_test_disabled").encode(env))
+}
+#[cfg(feature = "native-test")]
+pub(crate) fn native_test_write_clipboard_impl<'a>(
+    env: Env<'a>,
+    session: ResourceArc<native_test::NativeTestSessionResource>,
+    text: String,
+) -> NifResult<Term<'a>> {
+    match write_clipboard(&session, text) {
+        Ok(_unit) => Ok((atoms::ok(), atoms::ok()).encode(env)),
+        Err(reason) => Ok((atoms::error(), reason).encode(env)),
+    }
+}
+#[cfg(not(feature = "native-test"))]
+pub(crate) fn native_test_write_clipboard_impl<'a>(
+    env: Env<'a>,
+    _session: ResourceArc<native_test::NativeTestSessionResource>,
+    _text: String,
+) -> NifResult<Term<'a>> {
+    Ok((atoms::error(), "native_test_disabled").encode(env))
+}
+#[cfg(feature = "native-test")]
+pub(crate) fn native_test_read_clipboard_impl<'a>(
+    env: Env<'a>,
+    session: ResourceArc<native_test::NativeTestSessionResource>,
+) -> NifResult<Term<'a>> {
+    match read_clipboard(&session) {
+        Ok(text) => Ok((atoms::ok(), text).encode(env)),
+        Err(reason) => Ok((atoms::error(), reason).encode(env)),
+    }
+}
+#[cfg(not(feature = "native-test"))]
+pub(crate) fn native_test_read_clipboard_impl<'a>(
+    env: Env<'a>,
+    _session: ResourceArc<native_test::NativeTestSessionResource>,
 ) -> NifResult<Term<'a>> {
     Ok((atoms::error(), "native_test_disabled").encode(env))
 }

@@ -95,6 +95,17 @@ defmodule GPUI.Codegen.Native.Events do
     do: encode_value_event(env, Atoms.bounds(), window_id, event, value.encode(env))
   )
 
+  @spec encode_scroll_event(
+          Env.t(R.lifetime(:a)),
+          R.u64(),
+          String.t(),
+          R.f64()
+        ) :: R.nif_result(Term.t(R.lifetime(:a)))
+  defrust encode_scroll_event(env, window_id, event, offset_y) do
+    value = encode_event_map(env, [{Atoms.offset_y(), offset_y.encode(env)}])
+    encode_value_event(env, Atoms.scroll(), window_id, event, value)
+  end
+
   @spec encode_clipboard_event(
           Env.t(R.lifetime(:a)),
           R.u64(),
@@ -328,6 +339,28 @@ defmodule GPUI.Codegen.Native.Events do
     )
   end
 
+  @spec encode_click_event(
+          Env.t(R.lifetime(:a)),
+          R.u64(),
+          String.t(),
+          boolean(),
+          boolean(),
+          boolean()
+        ) :: R.nif_result(Term.t(R.lifetime(:a)))
+  defrust encode_click_event(env, window_id, event, shift, ctrl, meta) do
+    encode_event_map(
+      env,
+      [
+        {Atoms.type_atom(), Atoms.click().to_term(env)},
+        {Atoms.window_id(), window_id.encode(env)},
+        {Atoms.event(), event.encode(env)},
+        {Atoms.shift(), shift.encode(env)},
+        {Atoms.ctrl(), ctrl.encode(env)},
+        {Atoms.meta(), meta.encode(env)}
+      ]
+    )
+  end
+
   @spec encode_window_event(
           Env.t(R.lifetime(:a)),
           Atom.t(),
@@ -416,12 +449,14 @@ defmodule GPUI.Codegen.Native.Events do
       :encode_input_event,
       :append_event_value,
       :encode_named_event,
+      :encode_click_event,
       :encode_window_event,
       :encode_value_event
     ]
 
     real_gpui_only = [
       :encode_bounds_event,
+      :encode_scroll_event,
       :encode_focus_event,
       :encode_missing_resource_event
     ]

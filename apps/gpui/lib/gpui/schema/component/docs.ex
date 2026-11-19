@@ -112,6 +112,7 @@ defmodule GPUI.Schema.Component.Docs do
   defp type_doc(:rich_text_runs), do: "list of `t:GPUI.Text.RichRun.t/0`"
   defp type_doc(:paint_commands), do: "at most 256 bounded rectangle or line commands"
   defp type_doc(:resource), do: "resource map"
+  defp type_doc(:svg_source), do: "non-empty SVG markup of at most 1 MiB"
 
   defp type_doc({:enum, values}) do
     Enum.map_join(values, ", ", &"`#{inspect(&1)}`")

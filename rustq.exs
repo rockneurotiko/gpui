@@ -257,6 +257,9 @@ generate "native-stubs", "apps/gpui/lib/gpui/native/generated.ex" do
           host_info: MetaAST.function!(GPUI.Codegen.Native.RuntimeBoundary, :host_info),
           set_app_identity:
             MetaAST.function!(GPUI.Codegen.Native.RuntimeBoundary, :set_app_identity),
+          scroll_to_top: MetaAST.function!(GPUI.Codegen.Native.RuntimeBoundary, :scroll_to_top),
+          write_clipboard:
+            MetaAST.function!(GPUI.Codegen.Native.RuntimeBoundary, :write_clipboard),
           start_runtime: MetaAST.function!(GPUI.Codegen.Native.RuntimeBoundary, :start_runtime),
           stop_runtime: MetaAST.function!(GPUI.Codegen.Native.RuntimeBoundary, :stop_runtime),
           open_window: MetaAST.function!(GPUI.Codegen.Native.Window, :open_window),
@@ -266,6 +269,7 @@ generate "native-stubs", "apps/gpui/lib/gpui/native/generated.ex" do
           frame_token: MetaAST.function!(GPUI.Codegen.Native.Window, :frame_token),
           await_frame_after: MetaAST.function!(GPUI.Codegen.Native.Window, :await_frame_after),
           set_theme: MetaAST.function!(GPUI.Codegen.Native.Window, :set_theme),
+          load_fonts: MetaAST.function!(GPUI.Codegen.Native.Window, :load_fonts),
           put_resource: MetaAST.function!(GPUI.Codegen.Native.ResourceBoundary, :put_resource),
           drop_resource: MetaAST.function!(GPUI.Codegen.Native.ResourceBoundary, :drop_resource),
           drain_events: MetaAST.function!(GPUI.Codegen.Native.EventBoundary, :drain_events),
@@ -287,6 +291,12 @@ generate "native-stubs", "apps/gpui/lib/gpui/native/generated.ex" do
             MetaAST.function!(GPUI.Codegen.Native.TestBoundary, :native_test_click_at),
           native_test_scroll:
             MetaAST.function!(GPUI.Codegen.Native.TestBoundary, :native_test_scroll),
+          native_test_scroll_to_top:
+            MetaAST.function!(GPUI.Codegen.Native.TestBoundary, :native_test_scroll_to_top),
+          native_test_write_clipboard:
+            MetaAST.function!(GPUI.Codegen.Native.TestBoundary, :native_test_write_clipboard),
+          native_test_read_clipboard:
+            MetaAST.function!(GPUI.Codegen.Native.TestBoundary, :native_test_read_clipboard),
           native_test_input:
             MetaAST.function!(GPUI.Codegen.Native.TestBoundary, :native_test_input),
           native_test_key: MetaAST.function!(GPUI.Codegen.Native.TestBoundary, :native_test_key),

@@ -347,6 +347,18 @@ defmodule GPUI.CommandTest do
     end
   end
 
+  test "scroll_to_top reports an unavailable native backend instead of raising" do
+    unless GPUI.Native.Backend.available?() do
+      assert {:error, :native_backend_unavailable} = Command.scroll_to_top("feed")
+    end
+  end
+
+  test "write_clipboard reports an unavailable native backend instead of raising" do
+    unless GPUI.Native.Backend.available?() do
+      assert {:error, :native_backend_unavailable} = Command.write_clipboard("copied")
+    end
+  end
+
   defp component(%{type: type} = element, type), do: element
 
   defp component(%{children: children}, type) do

@@ -56,6 +56,17 @@ defmodule GPUI.EventTest do
              Event.normalize(%{type: :window_focus, window_id: 1, event: "focus"})
   end
 
+  test "click without modifier flags decodes with all of them false" do
+    assert {:ok, %{shift: false, ctrl: false, meta: false}} =
+             Event.normalize(%{type: :click, window_id: 1, event: "save"})
+
+    assert {:ok, %{shift: true, ctrl: false, meta: false}} =
+             Event.normalize(%{type: :click, window_id: 1, event: "save", shift: true})
+
+    assert {:error, {:invalid_event, :modifiers}} =
+             Event.normalize(%{type: :click, window_id: 1, event: "save", ctrl: 1})
+  end
+
   test "validates representative event value shapes" do
     assert {:ok, %{type: :click}} =
              Event.normalize(%{type: :click, window_id: 1, event: "save"})
@@ -89,5 +100,16 @@ defmodule GPUI.EventTest do
                event: "visible",
                value: %{first: 5, last: 2}
              })
+  end
+
+  test "scroll events carry a non-negative finite offset" do
+    scroll = %{type: :scroll, window_id: 1, event: "feed_scrolled"}
+
+    assert {:ok, %{value: %{offset_y: 0.0}}} =
+             Event.normalize(Map.put(scroll, :value, %{offset_y: 0.0}))
+
+    for value <- [%{offset_y: -1.0}, %{offset_y: "10"}, %{}, 12] do
+      assert {:error, {:invalid_event, :value}} = Event.normalize(Map.put(scroll, :value, value))
+    end
   end
 end

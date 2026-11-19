@@ -24,6 +24,7 @@ defmodule GPUI.Event do
           | :range_geometry
           | :hit_test
           | :bounds
+          | :scroll
           | :focus
           | :blur
           | :keydown
@@ -45,6 +46,9 @@ defmodule GPUI.Event do
           required(:window_id) => pos_integer(),
           optional(:event) => String.t(),
           optional(:value) => term(),
+          optional(:shift) => boolean(),
+          optional(:ctrl) => boolean(),
+          optional(:meta) => boolean(),
           optional(atom()) => term()
         }
 
@@ -73,6 +77,7 @@ defmodule GPUI.Event do
     :range_geometry,
     :hit_test,
     :bounds,
+    :scroll,
     :focus,
     :blur,
     :keydown,
@@ -99,6 +104,7 @@ defmodule GPUI.Event do
   ]
   @injectable_types @injectable_routed_types ++ @lifecycle_types
   @known_types @routed_types ++ @lifecycle_types
+  @click_modifiers [:shift, :ctrl, :meta]
   @max_event_name_bytes 512
   @max_file_read_bytes 25 * 1_024 * 1_024
 
@@ -179,7 +185,18 @@ defmodule GPUI.Event do
     end
   end
 
-  defp normalize_value(type, event) when type in [:click, :command, :clipboard_write, :copy] do
+  # Hosts that predate modifier reporting send clicks without the flags.
+  defp normalize_value(:click, event) do
+    event = Enum.reduce(@click_modifiers, event, &Map.put_new(&2, &1, false))
+
+    cond do
+      Map.has_key?(event, :value) -> invalid(:value)
+      Enum.all?(@click_modifiers, &is_boolean(Map.fetch!(event, &1))) -> {:ok, event}
+      true -> invalid(:modifiers)
+    end
+  end
+
+  defp normalize_value(type, event) when type in [:command, :clipboard_write, :copy] do
     if Map.has_key?(event, :value), do: invalid(:value), else: {:ok, event}
   end
 
@@ -208,6 +225,7 @@ defmodule GPUI.Event do
   defp normalize_value(:range_geometry, event), do: require_value(event, &is_list/1)
   defp normalize_value(:hit_test, event), do: require_value(event, &is_map/1)
   defp normalize_value(:bounds, event), do: require_value(event, &is_map/1)
+  defp normalize_value(:scroll, event), do: require_value(event, &valid_scroll?/1)
 
   defp normalize_value(type, event) when type in [:focus, :blur],
     do: require_value(event, &valid_focus?/1)
@@ -238,6 +256,9 @@ defmodule GPUI.Event do
     do: is_integer(first) and first >= 0 and is_integer(last) and last >= first
 
   defp valid_range?(_value), do: false
+
+  defp valid_scroll?(%{offset_y: offset}), do: finite_number?(offset) and offset >= 0
+  defp valid_scroll?(_value), do: false
 
   defp valid_focus?(%{id: id}), do: is_binary(id) and id != "" and String.valid?(id)
   defp valid_focus?(_value), do: false

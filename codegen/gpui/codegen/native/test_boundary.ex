@@ -33,9 +33,19 @@ defmodule GPUI.Codegen.Native.TestBoundary do
           required(:key) => String.t()
         }
 
+  @type click_request :: %{
+          required(:target) => String.t(),
+          required(:shift) => boolean(),
+          required(:ctrl) => boolean(),
+          required(:meta) => boolean()
+        }
+
   @type point_request :: %{
           required(:x) => R.f64(),
-          required(:y) => R.f64()
+          required(:y) => R.f64(),
+          required(:shift) => boolean(),
+          required(:ctrl) => boolean(),
+          required(:meta) => boolean()
         }
 
   @type scroll_request :: %{
@@ -66,8 +76,15 @@ defmodule GPUI.Codegen.Native.TestBoundary do
   @spec key_request(String.t()) :: key_request()
   defrust(key_request(key), do: %{key: key})
 
-  @spec point_request(R.f64(), R.f64()) :: point_request()
-  defrust(point_request(x, y), do: %{x: x, y: y})
+  @spec click_request(String.t(), boolean(), boolean(), boolean()) :: click_request()
+  defrust(click_request(target, shift, ctrl, meta),
+    do: %{target: target, shift: shift, ctrl: ctrl, meta: meta}
+  )
+
+  @spec point_request(R.f64(), R.f64(), boolean(), boolean(), boolean()) :: point_request()
+  defrust(point_request(x, y, shift, ctrl, meta),
+    do: %{x: x, y: y, shift: shift, ctrl: ctrl, meta: meta}
+  )
 
   @spec scroll_request(String.t(), R.f64(), R.f64()) :: scroll_request()
   defrust(scroll_request(target, delta_x, delta_y),
@@ -127,20 +144,26 @@ defmodule GPUI.Codegen.Native.TestBoundary do
   @nif schedule: :dirty_io
   @spec native_test_click(
           R.resource(NativeTest.NativeTestSessionResource.t()),
-          String.t()
+          String.t(),
+          boolean(),
+          boolean(),
+          boolean()
         ) :: R.nif_result(term())
-  defnif native_test_click(session, target) do
-    native_test_click_impl(nif_env(), session, target_request(target))
+  defnif native_test_click(session, target, shift, ctrl, meta) do
+    native_test_click_impl(nif_env(), session, click_request(target, shift, ctrl, meta))
   end
 
   @nif schedule: :dirty_io
   @spec native_test_click_at(
           R.resource(NativeTest.NativeTestSessionResource.t()),
           R.f64(),
-          R.f64()
+          R.f64(),
+          boolean(),
+          boolean(),
+          boolean()
         ) :: R.nif_result(term())
-  defnif native_test_click_at(session, x, y) do
-    native_test_click_at_impl(nif_env(), session, point_request(x, y))
+  defnif native_test_click_at(session, x, y, shift, ctrl, meta) do
+    native_test_click_at_impl(nif_env(), session, point_request(x, y, shift, ctrl, meta))
   end
 
   @nif schedule: :dirty_io
@@ -152,6 +175,31 @@ defmodule GPUI.Codegen.Native.TestBoundary do
         ) :: R.nif_result(term())
   defnif native_test_scroll(session, target, delta_x, delta_y) do
     native_test_scroll_impl(nif_env(), session, scroll_request(target, delta_x, delta_y))
+  end
+
+  @nif schedule: :dirty_io
+  @spec native_test_scroll_to_top(
+          R.resource(NativeTest.NativeTestSessionResource.t()),
+          String.t()
+        ) :: R.nif_result(term())
+  defnif native_test_scroll_to_top(session, target) do
+    native_test_scroll_to_top_impl(nif_env(), session, target_request(target))
+  end
+
+  @nif schedule: :dirty_io
+  @spec native_test_write_clipboard(
+          R.resource(NativeTest.NativeTestSessionResource.t()),
+          String.t()
+        ) :: R.nif_result(term())
+  defnif native_test_write_clipboard(session, text) do
+    native_test_write_clipboard_impl(nif_env(), session, text)
+  end
+
+  @nif schedule: :dirty_io
+  @spec native_test_read_clipboard(R.resource(NativeTest.NativeTestSessionResource.t())) ::
+          R.nif_result(term())
+  defnif native_test_read_clipboard(session) do
+    native_test_read_clipboard_impl(nif_env(), session)
   end
 
   @nif schedule: :dirty_io

@@ -189,6 +189,35 @@ defmodule GPUI.UI.ComponentsTest do
     end
   end
 
+  test "select and input accept sizing, radius and border classes" do
+    class = "w-[260px] h-[36px] rounded-[7px] border border-[#334155]"
+
+    assert %Element{type: :ui_select, attrs: select} =
+             UI.select(%{
+               id: "plan",
+               label: "Plan",
+               options: ["a"],
+               class: class,
+               "phx-change": "changed"
+             })
+
+    assert %Element{type: :ui_input, attrs: input} =
+             UI.input(%{id: "name", label: "Name", class: class, "phx-change": "changed"})
+
+    assert select[:class] == class
+    assert input[:class] == class
+
+    assert %{style: style, unknown: []} = GPUI.Tailwind.normalize(class)
+
+    assert [
+             width: {:px, 260.0},
+             height: {:px, 36.0},
+             border_radius: {:px, 7.0},
+             border_width: {:px, 1.0},
+             border_color: {:rgb, 0x334155}
+           ] = style
+  end
+
   test "validates schema-backed component attributes before native rendering" do
     assert_raise ArgumentError, ~r/ui_button :label must be a non-empty string; got: 42/, fn ->
       UI.button(%{id: "save", label: 42})

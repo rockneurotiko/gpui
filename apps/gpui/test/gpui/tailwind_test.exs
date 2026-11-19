@@ -12,6 +12,25 @@ defmodule GPUI.TailwindTest do
     end)
   end
 
+  test "normalizes text decoration, italic and transform classes" do
+    assert %{style: style, unknown: []} =
+             GPUI.Tailwind.normalize("italic underline line-through uppercase")
+
+    assert Enum.sort(style) ==
+             [
+               font_style: :italic,
+               line_through: true,
+               text_transform: :uppercase,
+               underline: true
+             ]
+
+    assert %{style: [font_style: :normal, text_transform: :none], unknown: []} =
+             GPUI.Tailwind.normalize("italic not-italic capitalize normal-case")
+
+    assert %{style: [], unknown: []} = GPUI.Tailwind.normalize("underline no-underline")
+    assert %{unknown: ["tracking-wide"]} = GPUI.Tailwind.normalize("tracking-wide")
+  end
+
   test "programmatic UI components normalize classes before serialization" do
     payload =
       GPUI.UI.tree_item(%{
@@ -32,6 +51,45 @@ defmodule GPUI.TailwindTest do
              cursor: :pointer,
              color: [:rgb, 0xFFFFFF]
            ]
+  end
+
+  test "normalizes font families" do
+    for {class, family} <- [
+          {"font-[Fira_Code]", "Fira Code"},
+          {"font-['Fira_Code']", "Fira Code"},
+          {"font-[family-name:Fira_Code]", "Fira Code"}
+        ] do
+      assert %{style: [font_family: ^family], unknown: []} = GPUI.Tailwind.normalize(class)
+    end
+
+    assert %{style: [], unknown: ["font-[Broken"]} = GPUI.Tailwind.normalize("font-[Broken")
+    assert %{style: [], unknown: ["font-[650]"]} = GPUI.Tailwind.normalize("font-[650]")
+    assert %{style: [], unknown: ["font-[1000]"]} = GPUI.Tailwind.normalize("font-[1000]")
+  end
+
+  test "normalizes the full font weight scale" do
+    for {class, weight} <- [
+          {"font-thin", :thin},
+          {"font-extralight", :extra_light},
+          {"font-light", :light},
+          {"font-normal", :normal},
+          {"font-medium", :medium},
+          {"font-semibold", :semibold},
+          {"font-bold", :bold},
+          {"font-extrabold", :extra_bold},
+          {"font-black", :black},
+          {"font-[100]", :thin},
+          {"font-[200]", :extra_light},
+          {"font-[300]", :light},
+          {"font-[400]", :normal},
+          {"font-[500]", :medium},
+          {"font-[600]", :semibold},
+          {"font-[700]", :bold},
+          {"font-[800]", :extra_bold},
+          {"font-[900]", :black}
+        ] do
+      assert %{style: [font_weight: ^weight], unknown: []} = GPUI.Tailwind.normalize(class)
+    end
   end
 
   test "normalizes a useful Tailwind subset" do
@@ -266,11 +324,123 @@ defmodule GPUI.TailwindTest do
            ]
   end
 
+  test "per-corner border radius" do
+    assert %{style: style, unknown: []} =
+             GPUI.Tailwind.normalize("rounded-t-[9px] rounded-br-lg rounded-l")
+
+    assert Enum.sort(style) == [
+             border_bottom_left_radius: {:px, 4.0},
+             border_bottom_right_radius: {:px, 8.0},
+             border_top_left_radius: {:px, 4.0},
+             border_top_right_radius: {:px, 9.0}
+           ]
+
+    assert %{style: [border_radius: :full], unknown: []} = GPUI.Tailwind.normalize("rounded-full")
+    assert %{unknown: ["rounded-x-lg"]} = GPUI.Tailwind.normalize("rounded-x-lg")
+  end
+
+  test "per-side border widths and border style" do
+    assert %{style: style, unknown: []} =
+             GPUI.Tailwind.normalize(
+               "border-b border-t-2 border-l-[1.5px] border-x-4 border-dashed"
+             )
+
+    assert style == [
+             border_bottom_width: {:px, 1.0},
+             border_top_width: {:px, 2.0},
+             border_left_width: {:px, 4.0},
+             border_right_width: {:px, 4.0},
+             border_style: :dashed
+           ]
+
+    assert %{style: [border_style: :solid, border_color: {:rgb, 0xEF4444}], unknown: []} =
+             GPUI.Tailwind.normalize("border-solid border-red-500")
+
+    assert %{style: [border_color: _], unknown: []} =
+             GPUI.Tailwind.normalize("border-transparent")
+
+    assert %{unknown: ["border-t-3"]} = GPUI.Tailwind.normalize("border-t-3")
+  end
+
+  test "normalizes focus and focus-within colours" do
+    assert %{
+             style: [
+               focus_background: {:rgb, 0x3B82F6},
+               focus_color: {:rgb, 0xFFFFFF},
+               focus_border_color: {:rgb, 0xEF4444},
+               focus_within_background: {:rgb, 0x0F172A},
+               focus_within_color: {:rgb, 0xFFFFFF},
+               focus_within_border_color: {:rgb, 0xEF4444}
+             ],
+             unknown: []
+           } =
+             GPUI.Tailwind.normalize(
+               "focus:bg-blue-500 focus:text-white focus:border-red-500 " <>
+                 "focus-within:bg-slate-900 focus-within:text-white focus-within:border-red-500"
+             )
+
+    assert %{unknown: ["focus:bg-nope"]} = GPUI.Tailwind.normalize("focus:bg-nope")
+  end
+
+  test "normalizes hover, focus and focus-within opacity" do
+    assert %{
+             style: [hover_opacity: 0.5, focus_opacity: 0.75, focus_within_opacity: 1.0],
+             unknown: []
+           } =
+             GPUI.Tailwind.normalize(
+               "hover:opacity-50 focus:opacity-[0.75] focus-within:opacity-100"
+             )
+
+    assert %{unknown: ["hover:opacity-101"]} = GPUI.Tailwind.normalize("hover:opacity-101")
+    assert %{unknown: ["focus:opacity-[2]"]} = GPUI.Tailwind.normalize("focus:opacity-[2]")
+  end
+
+  test "normalizes active colours and opacity" do
+    assert %{
+             style: [
+               active_background: _,
+               active_color: _,
+               active_border_color: _,
+               active_opacity: 0.5
+             ],
+             unknown: []
+           } =
+             GPUI.Tailwind.normalize(
+               "active:bg-blue-500 active:text-white active:border-red-500 active:opacity-50"
+             )
+
+    assert %{unknown: ["active:bg-nope"]} = GPUI.Tailwind.normalize("active:bg-nope")
+    assert %{unknown: ["active:opacity-101"]} = GPUI.Tailwind.normalize("active:opacity-101")
+  end
+
+  test "normalizes focus-visible colours and opacity" do
+    assert %{
+             style: [
+               focus_visible_background: _,
+               focus_visible_color: _,
+               focus_visible_border_color: _,
+               focus_visible_opacity: 0.5
+             ],
+             unknown: []
+           } =
+             GPUI.Tailwind.normalize(
+               "focus-visible:bg-blue-500 focus-visible:text-white focus-visible:border-red-500 focus-visible:opacity-50"
+             )
+
+    assert %{unknown: ["focus-visible:bg-nope"]} =
+             GPUI.Tailwind.normalize("focus-visible:bg-nope")
+  end
+
   test "every normalized style is supported by the native schema" do
     classes =
       "flex block grid hidden flex-col-reverse flex-wrap grow shrink-0 items-baseline " <>
         "justify-evenly font-bold leading-normal opacity-50 p-2 px-3 mt-1 w-full h-full " <>
-        "min-w-6 max-h-8 border border-blue-500 rounded-lg bg-slate-900 text-white"
+        "min-w-6 max-h-8 border border-blue-500 rounded-lg bg-slate-900 text-white " <>
+        "hover:bg-blue-500 focus:bg-blue-500 focus-within:text-white " <>
+        "hover:opacity-50 focus:opacity-50 focus-within:opacity-50 " <>
+        "active:bg-blue-500 active:text-white active:border-blue-500 active:opacity-50 " <>
+        "focus-visible:bg-blue-500 focus-visible:text-white focus-visible:border-blue-500 " <>
+        "focus-visible:opacity-50"
 
     assert %{style: styles} = GPUI.Tailwind.normalize(classes)
     assert Enum.all?(Keyword.keys(styles), &(&1 in GPUI.Schema.styles()))
@@ -279,7 +449,48 @@ defmodule GPUI.TailwindTest do
   test "preserves unsupported classes exactly" do
     assert %{
              style: [display: :flex],
-             unknown: ["hover:bg-blue-500", "w-[calc(100%-1rem)]", "mx-auto"]
-           } = GPUI.Tailwind.normalize("flex hover:bg-blue-500 w-[calc(100%-1rem)] mx-auto")
+             unknown: ["group-hover:bg-blue-500", "w-[calc(100%-1rem)]", "mx-auto"]
+           } = GPUI.Tailwind.normalize("flex group-hover:bg-blue-500 w-[calc(100%-1rem)] mx-auto")
   end
+
+  test "normalizes box shadows" do
+    assert shadow("shadow-none") == []
+
+    assert shadow("shadow-sm") == [
+             {{:px, 0.0}, {:px, 1.0}, {:px, 2.0}, {:px, 0.0}, {:rgba, 13}, false}
+           ]
+
+    assert [_, {{:px, +0.0}, {:px, 1.0}, {:px, 2.0}, {:px, -1.0}, {:rgba, 26}, false}] =
+             shadow("shadow")
+
+    assert shadow("shadow-2xl") == [
+             {{:px, 0.0}, {:px, 25.0}, {:px, 50.0}, {:px, -12.0}, {:rgba, 64}, false}
+           ]
+
+    assert shadow("shadow-inner") == [
+             {{:px, 0.0}, {:px, 2.0}, {:px, 4.0}, {:px, 0.0}, {:rgba, 13}, true}
+           ]
+
+    for name <- ~w(2xs xs md lg xl), do: assert([_ | _] = shadow("shadow-#{name}"))
+  end
+
+  test "normalizes arbitrary box shadows" do
+    assert shadow("shadow-[0_1px_2px_#11223344]") ==
+             [{{:px, 0.0}, {:px, 1.0}, {:px, 2.0}, {:px, 0.0}, {:rgba, 0x11223344}, false}]
+
+    assert shadow("shadow-[1_-2.5px_3px_4px_#f00]") ==
+             [{{:px, 1.0}, {:px, -2.5}, {:px, 3.0}, {:px, 4.0}, {:rgba, 0xFF0000FF}, false}]
+
+    assert shadow("shadow-[0_1px_2px_rgba(0,0,0,0.1),inset_0_0_0_1px_rgb(1,2,3,50%)]") == [
+             {{:px, 0.0}, {:px, 1.0}, {:px, 2.0}, {:px, 0.0}, {:rgba, 0x0000001A}, false},
+             {{:px, 0.0}, {:px, 0.0}, {:px, 0.0}, {:px, 1.0}, {:rgba, 0x01020380}, true}
+           ]
+
+    for class <-
+          ~w(shadow-red-500 shadow-[0_1px] shadow-[0_1px_2px_nope] shadow-[0_-1px_-2px_#000] shadow-[0_1px_2px_#000 shadow-[]) do
+      assert %{style: [], unknown: [^class]} = GPUI.Tailwind.normalize(class)
+    end
+  end
+
+  defp shadow(class), do: GPUI.Tailwind.normalize(class).style[:box_shadow]
 end

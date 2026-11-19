@@ -24,10 +24,12 @@ enum TestCommand {
         reply: TestCommandReply<()>,
     },
     Click {
+        modifiers: gpui::Modifiers,
         element_id: &'static str,
         reply: TestCommandReply<()>,
     },
     ClickAt {
+        modifiers: gpui::Modifiers,
         x: f32,
         y: f32,
         reply: TestCommandReply<()>,
@@ -44,6 +46,17 @@ enum TestCommand {
         delta_x: f32,
         delta_y: f32,
         reply: TestCommandReply<()>,
+    },
+    ScrollToTop {
+        element_id: String,
+        reply: TestCommandReply<()>,
+    },
+    WriteClipboard {
+        text: String,
+        reply: TestCommandReply<()>,
+    },
+    ReadClipboard {
+        reply: TestCommandReply<String>,
     },
     Input {
         text: String,
@@ -309,19 +322,25 @@ fn handle_non_stop_command(session: &mut TestSession, command: TestCommand) {
             });
             let _ = reply.send(result);
         }
-        TestCommand::Click { element_id, reply } => {
+        TestCommand::Click {
+            element_id,
+            modifiers,
+            reply,
+        } => {
             let result = target_bounds(&mut session.context, element_id).map(|bounds| {
-                session
-                    .context
-                    .simulate_click(bounds.center(), gpui::Modifiers::default());
+                session.context.simulate_click(bounds.center(), modifiers);
             });
             let _ = reply.send(result);
         }
-        TestCommand::ClickAt { x, y, reply } => {
-            session.context.simulate_click(
-                gpui::point(gpui::px(x), gpui::px(y)),
-                gpui::Modifiers::default(),
-            );
+        TestCommand::ClickAt {
+            x,
+            y,
+            modifiers,
+            reply,
+        } => {
+            session
+                .context
+                .simulate_click(gpui::point(gpui::px(x), gpui::px(y)), modifiers);
             let _ = reply.send(Ok(()));
         }
         TestCommand::Drag {
@@ -374,6 +393,19 @@ fn handle_non_stop_command(session: &mut TestSession, command: TestCommand) {
             });
             let _ = reply.send(result);
         }
+        TestCommand::WriteClipboard { text, reply } => {
+            session
+                .context
+                .update(|_window, cx| cx.write_to_clipboard(gpui::ClipboardItem::new_string(text)));
+            let _ = reply.send(Ok(()));
+        }
+        TestCommand::ReadClipboard { reply } => {
+            // GPUI reads an empty clipboard item as no text, so both come back as "".
+            let text = session
+                .context
+                .update(|_window, cx| cx.read_from_clipboard().and_then(|item| item.text()));
+            let _ = reply.send(Ok(text.unwrap_or_default()));
+        }
         TestCommand::Input { text, reply } => {
             session.context.simulate_input(&text);
             let _ = reply.send(Ok(()));
@@ -399,6 +431,13 @@ fn handle_non_stop_command(session: &mut TestSession, command: TestCommand) {
             let _ = reply.send(result);
         }
         TestCommand::Idle { reply } => {
+            session.context.run_until_parked();
+            draw_root(session);
+            session.context.run_until_parked();
+            let _ = reply.send(Ok(()));
+        }
+        TestCommand::ScrollToTop { element_id, reply } => {
+            crate::element::scroll::scroll_to_top(&element_id);
             session.context.run_until_parked();
             draw_root(session);
             session.context.run_until_parked();
@@ -453,21 +492,42 @@ pub(crate) fn focus(
         reply,
     })
 }
+/// Builds the modifier keys held during a simulated click; `meta` is the platform key.
+#[cfg(feature = "native-test")]
+pub(crate) fn modifiers(shift: bool, ctrl: bool, meta: bool) -> gpui::Modifiers {
+    gpui::Modifiers {
+        shift,
+        control: ctrl,
+        platform: meta,
+        ..Default::default()
+    }
+}
 #[cfg(feature = "native-test")]
 pub(crate) fn click(
     session: &rustler::ResourceArc<NativeTestSessionResource>,
     element_id: String,
+    modifiers: gpui::Modifiers,
 ) -> Result<(), String> {
     let element_id = selector(session, element_id)?;
-    execute(session, |reply| TestCommand::Click { element_id, reply })
+    execute(session, |reply| TestCommand::Click {
+        element_id,
+        modifiers,
+        reply,
+    })
 }
 #[cfg(feature = "native-test")]
 pub(crate) fn click_at(
     session: &rustler::ResourceArc<NativeTestSessionResource>,
     x: f32,
     y: f32,
+    modifiers: gpui::Modifiers,
 ) -> Result<(), String> {
-    execute(session, |reply| TestCommand::ClickAt { x, y, reply })
+    execute(session, |reply| TestCommand::ClickAt {
+        x,
+        y,
+        modifiers,
+        reply,
+    })
 }
 #[cfg(feature = "native-test")]
 pub(crate) fn drag(
@@ -500,6 +560,32 @@ pub(crate) fn scroll(
         reply,
     })
 }
+#[cfg(feature = "native-test")]
+pub(crate) fn scroll_to_top(
+    session: &rustler::ResourceArc<NativeTestSessionResource>,
+    element_id: String,
+) -> Result<(), String> {
+    execute(session, |reply| TestCommand::ScrollToTop {
+        element_id,
+        reply,
+    })
+}
+
+#[cfg(feature = "native-test")]
+pub(crate) fn write_clipboard(
+    session: &rustler::ResourceArc<NativeTestSessionResource>,
+    text: String,
+) -> Result<(), String> {
+    execute(session, |reply| TestCommand::WriteClipboard { text, reply })
+}
+
+#[cfg(feature = "native-test")]
+pub(crate) fn read_clipboard(
+    session: &rustler::ResourceArc<NativeTestSessionResource>,
+) -> Result<String, String> {
+    execute(session, |reply| TestCommand::ReadClipboard { reply })
+}
+
 #[cfg(feature = "native-test")]
 pub(crate) fn input(
     session: &rustler::ResourceArc<NativeTestSessionResource>,

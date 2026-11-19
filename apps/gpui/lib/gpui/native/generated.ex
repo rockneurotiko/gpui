@@ -34,6 +34,14 @@ defmodule GPUI.Native.Generated do
         :erlang.nif_error(:nif_not_loaded)
       end
 
+      def scroll_to_top(_element_id) do
+        :erlang.nif_error(:nif_not_loaded)
+      end
+
+      def write_clipboard(_text) do
+        :erlang.nif_error(:nif_not_loaded)
+      end
+
       def start_runtime do
         :erlang.nif_error(:nif_not_loaded)
       end
@@ -67,6 +75,10 @@ defmodule GPUI.Native.Generated do
       end
 
       def set_theme(_runtime, _mode) do
+        :erlang.nif_error(:nif_not_loaded)
+      end
+
+      def load_fonts(_runtime, _fonts) do
         :erlang.nif_error(:nif_not_loaded)
       end
 
@@ -106,7 +118,7 @@ defmodule GPUI.Native.Generated do
         :erlang.nif_error(:nif_not_loaded)
       end
 
-      def native_test_click(_session, _target) do
+      def native_test_click(_session, _target, _shift, _ctrl, _meta) do
         :erlang.nif_error(:nif_not_loaded)
       end
 
@@ -114,11 +126,23 @@ defmodule GPUI.Native.Generated do
         :erlang.nif_error(:nif_not_loaded)
       end
 
-      def native_test_click_at(_session, _x, _y) do
+      def native_test_click_at(_session, _x, _y, _shift, _ctrl, _meta) do
         :erlang.nif_error(:nif_not_loaded)
       end
 
       def native_test_scroll(_session, _target, _delta_x, _delta_y) do
+        :erlang.nif_error(:nif_not_loaded)
+      end
+
+      def native_test_scroll_to_top(_session, _target) do
+        :erlang.nif_error(:nif_not_loaded)
+      end
+
+      def native_test_write_clipboard(_session, _text) do
+        :erlang.nif_error(:nif_not_loaded)
+      end
+
+      def native_test_read_clipboard(_session) do
         :erlang.nif_error(:nif_not_loaded)
       end
 

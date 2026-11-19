@@ -111,6 +111,154 @@ defmodule GPUI.Tailwind do
     ArgumentError -> :ets.whereis(@cache_table)
   end
 
+  @arbitrary_weights %{
+    "100" => :thin,
+    "200" => :extra_light,
+    "300" => :light,
+    "400" => :normal,
+    "500" => :medium,
+    "600" => :semibold,
+    "700" => :bold,
+    "800" => :extra_bold,
+    "900" => :black
+  }
+
+  # `font-[600]` is an arbitrary weight, not a family; other digit-only names are unknown.
+  defp font_family(acc, name, class) do
+    name = name |> String.replace_prefix("family-name:", "") |> String.trim("'")
+
+    cond do
+      weight = @arbitrary_weights[name] -> put_style(acc, :font_weight, weight)
+      name == "" or String.match?(name, ~r/^\d+$/) -> unknown(acc, class)
+      true -> put_style(acc, :font_family, String.replace(name, "_", " "))
+    end
+  end
+
+  # Tailwind's default box shadows as {x, y, blur, spread, color, inset}, lengths in px.
+  @shadows %{
+    "none" => [],
+    "2xs" => [{{:px, 0.0}, {:px, 1.0}, {:px, 0.0}, {:px, 0.0}, {:rgba, 13}, false}],
+    "xs" => [{{:px, 0.0}, {:px, 1.0}, {:px, 2.0}, {:px, 0.0}, {:rgba, 13}, false}],
+    "sm" => [{{:px, 0.0}, {:px, 1.0}, {:px, 2.0}, {:px, 0.0}, {:rgba, 13}, false}],
+    "" => [
+      {{:px, 0.0}, {:px, 1.0}, {:px, 3.0}, {:px, 0.0}, {:rgba, 26}, false},
+      {{:px, 0.0}, {:px, 1.0}, {:px, 2.0}, {:px, -1.0}, {:rgba, 26}, false}
+    ],
+    "md" => [
+      {{:px, 0.0}, {:px, 4.0}, {:px, 6.0}, {:px, -1.0}, {:rgba, 26}, false},
+      {{:px, 0.0}, {:px, 2.0}, {:px, 4.0}, {:px, -2.0}, {:rgba, 26}, false}
+    ],
+    "lg" => [
+      {{:px, 0.0}, {:px, 10.0}, {:px, 15.0}, {:px, -3.0}, {:rgba, 26}, false},
+      {{:px, 0.0}, {:px, 4.0}, {:px, 6.0}, {:px, -4.0}, {:rgba, 26}, false}
+    ],
+    "xl" => [
+      {{:px, 0.0}, {:px, 20.0}, {:px, 25.0}, {:px, -5.0}, {:rgba, 26}, false},
+      {{:px, 0.0}, {:px, 8.0}, {:px, 10.0}, {:px, -6.0}, {:rgba, 26}, false}
+    ],
+    "2xl" => [{{:px, 0.0}, {:px, 25.0}, {:px, 50.0}, {:px, -12.0}, {:rgba, 64}, false}],
+    "inner" => [{{:px, 0.0}, {:px, 2.0}, {:px, 4.0}, {:px, 0.0}, {:rgba, 13}, true}]
+  }
+
+  defp shadow(acc, name, class) do
+    case Map.fetch(@shadows, name) do
+      {:ok, layers} -> put_style(acc, :box_shadow, layers)
+      :error -> unknown(acc, class)
+    end
+  end
+
+  # `shadow-[0_1px_2px_#0003,inset_0_0_0_1px_rgba(0,0,0,0.1)]`: layers are comma separated
+  # (outside parentheses), tokens underscore separated.
+  # shortcut: colors must be the last token and contain no underscores, add if needed.
+  defp arbitrary_shadow(acc, rest, class) do
+    with [body, ""] <- String.split(rest, "]", parts: 2),
+         layers when layers != [] <- split_layers(body),
+         {:ok, parsed} <- parse_shadow_layers(layers) do
+      put_style(acc, :box_shadow, parsed)
+    else
+      _invalid -> unknown(acc, class)
+    end
+  end
+
+  defp split_layers(body), do: Regex.split(~r/,(?![^(]*\))/, body)
+
+  defp parse_shadow_layers(layers) do
+    parsed = Enum.map(layers, &parse_shadow_layer/1)
+    if :error in parsed, do: :error, else: {:ok, Enum.map(parsed, &elem(&1, 1))}
+  end
+
+  defp parse_shadow_layer(layer) do
+    {inset, tokens} =
+      case String.split(layer, "_", trim: true) do
+        ["inset" | tokens] -> {true, tokens}
+        tokens -> {false, tokens}
+      end
+
+    with true <- length(tokens) in 3..5,
+         {lengths, [color]} <- Enum.split(tokens, -1),
+         {:ok, [x, y | rest]} <- shadow_lengths(lengths),
+         [blur, spread] <- Enum.take(rest ++ [0.0, 0.0], 2),
+         true <- blur >= 0.0,
+         {:ok, color} <- shadow_color(color) do
+      {:ok, {{:px, x}, {:px, y}, {:px, blur}, {:px, spread}, color, inset}}
+    else
+      _invalid -> :error
+    end
+  end
+
+  defp shadow_lengths(tokens) do
+    lengths = Enum.map(tokens, &shadow_length/1)
+    if :error in lengths, do: :error, else: {:ok, lengths}
+  end
+
+  defp shadow_length(token) do
+    with true <- Regex.match?(~r/^-?\d+(\.\d+)?(px)?$/, token),
+         {number, _unit} <- Float.parse(token) do
+      number
+    else
+      _invalid -> :error
+    end
+  end
+
+  defp shadow_color("#" <> hex) when byte_size(hex) in [3, 4, 6, 8] do
+    with {:ok, color} <- parse_hex_color(hex), do: {:ok, to_rgba(color)}
+  end
+
+  defp shadow_color(color) do
+    with [_, channels] <- Regex.run(~r/^rgba?\((.*)\)$/, color),
+         [r, g, b | alpha] <- channels |> String.split(",") |> Enum.map(&String.trim/1),
+         [r, g, b] <- Enum.map([r, g, b], &Integer.parse/1),
+         true <- Enum.all?([r, g, b], &match?({n, ""} when n in 0..255, &1)),
+         {:ok, alpha} <- shadow_alpha(alpha) do
+      {:ok,
+       {:rgba,
+        Bitwise.bsl(elem(r, 0), 24) + Bitwise.bsl(elem(g, 0), 16) + Bitwise.bsl(elem(b, 0), 8) +
+          alpha}}
+    else
+      _invalid -> :error
+    end
+  end
+
+  defp to_rgba({:rgba, _value} = color), do: color
+  defp to_rgba({:rgb, value}), do: {:rgba, Bitwise.bsl(value, 8) + 255}
+
+  defp shadow_alpha([]), do: {:ok, 255}
+
+  defp shadow_alpha([alpha]) do
+    {number, divisor} =
+      case String.split_at(alpha, -1) do
+        {percentage, "%"} -> {percentage, 100.0}
+        _plain -> {alpha, 1.0}
+      end
+
+    case Float.parse(number) do
+      {value, ""} when value >= 0 and value <= divisor -> {:ok, round(255 * value / divisor)}
+      _invalid -> :error
+    end
+  end
+
+  defp shadow_alpha(_alpha), do: :error
+
   defp normalize_class("relative", acc), do: put_style(acc, :position, :relative)
   defp normalize_class("absolute", acc), do: put_style(acc, :position, :absolute)
   defp normalize_class("flex-1", acc), do: put_style(acc, :flex, :one)
@@ -155,28 +303,62 @@ defmodule GPUI.Tailwind do
   defp normalize_class("text-left", acc), do: put_style(acc, :text_align, :left)
   defp normalize_class("text-center", acc), do: put_style(acc, :text_align, :center)
   defp normalize_class("text-right", acc), do: put_style(acc, :text_align, :right)
+  defp normalize_class("italic", acc), do: put_style(acc, :font_style, :italic)
+  defp normalize_class("not-italic", acc), do: put_style(acc, :font_style, :normal)
+  defp normalize_class("underline", acc), do: put_style(acc, :underline, true)
+  defp normalize_class("line-through", acc), do: put_style(acc, :line_through, true)
+
+  defp normalize_class("no-underline", acc),
+    do: update_in(acc.style, &Keyword.delete(&1, :underline))
+
+  defp normalize_class("uppercase", acc), do: put_style(acc, :text_transform, :uppercase)
+  defp normalize_class("lowercase", acc), do: put_style(acc, :text_transform, :lowercase)
+  defp normalize_class("capitalize", acc), do: put_style(acc, :text_transform, :capitalize)
+  defp normalize_class("normal-case", acc), do: put_style(acc, :text_transform, :none)
   defp normalize_class("truncate", acc), do: put_style(acc, :truncate, true)
   defp normalize_class("cursor-default", acc), do: put_style(acc, :cursor, :default)
   defp normalize_class("cursor-pointer", acc), do: put_style(acc, :cursor, :pointer)
   defp normalize_class("cursor-text", acc), do: put_style(acc, :cursor, :text)
   defp normalize_class("cursor-move", acc), do: put_style(acc, :cursor, :move)
   defp normalize_class("cursor-not-allowed", acc), do: put_style(acc, :cursor, :not_allowed)
+
+  defp normalize_class("font-[" <> rest, acc) do
+    case String.split(rest, "]", parts: 2) do
+      [name, ""] -> font_family(acc, name, "font-[" <> rest)
+      _ -> unknown(acc, "font-[" <> rest)
+    end
+  end
+
+  defp normalize_class("font-thin", acc), do: put_style(acc, :font_weight, :thin)
+  defp normalize_class("font-extralight", acc), do: put_style(acc, :font_weight, :extra_light)
   defp normalize_class("font-light", acc), do: put_style(acc, :font_weight, :light)
   defp normalize_class("font-normal", acc), do: put_style(acc, :font_weight, :normal)
   defp normalize_class("font-medium", acc), do: put_style(acc, :font_weight, :medium)
   defp normalize_class("font-semibold", acc), do: put_style(acc, :font_weight, :semibold)
   defp normalize_class("font-bold", acc), do: put_style(acc, :font_weight, :bold)
+  defp normalize_class("font-extrabold", acc), do: put_style(acc, :font_weight, :extra_bold)
+  defp normalize_class("font-black", acc), do: put_style(acc, :font_weight, :black)
   defp normalize_class("border", acc), do: put_style(acc, :border_width, {:px, 1.0})
-  defp normalize_class("border-" <> color, acc), do: color(acc, :border_color, color, "border-")
+  defp normalize_class("border-solid", acc), do: put_style(acc, :border_style, :solid)
+  defp normalize_class("border-dashed", acc), do: put_style(acc, :border_style, :dashed)
+
+  defp normalize_class("border-" <> rest, acc) do
+    case border_side(rest) do
+      {:ok, keys, width} -> Enum.reduce(keys, acc, &put_style(&2, &1, width))
+      :error -> color(acc, :border_color, rest, "border-")
+    end
+  end
 
   defp normalize_class("rounded" <> suffix = class, acc) do
+    {keys, suffix} = rounded_corners(suffix)
+
     radius =
       if suffix == "",
         do: {:ok, {:px, 4.0}},
         else: rounded_radius(String.trim_leading(suffix, "-"))
 
     case radius do
-      {:ok, value} -> put_style(acc, :border_radius, value)
+      {:ok, value} -> Enum.reduce(keys, acc, &put_style(&2, &1, value))
       :error -> unknown(acc, class)
     end
   end
@@ -236,10 +418,76 @@ defmodule GPUI.Tailwind do
     end
   end
 
+  defp normalize_class("active:bg-" <> color, acc),
+    do: color(acc, :active_background, color, "active:bg-")
+
+  defp normalize_class("active:text-" <> color, acc),
+    do: color(acc, :active_color, color, "active:text-")
+
+  defp normalize_class("active:border-" <> color, acc),
+    do: color(acc, :active_border_color, color, "active:border-")
+
+  defp normalize_class("active:opacity-" <> value, acc),
+    do: opacity(value, acc, :active_opacity, "active:opacity-")
+
+  defp normalize_class("hover:bg-" <> color, acc),
+    do: color(acc, :hover_background, color, "hover:bg-")
+
+  defp normalize_class("hover:text-" <> color, acc),
+    do: color(acc, :hover_color, color, "hover:text-")
+
+  defp normalize_class("hover:border-" <> color, acc),
+    do: color(acc, :hover_border_color, color, "hover:border-")
+
+  defp normalize_class("focus-within:bg-" <> color, acc),
+    do: color(acc, :focus_within_background, color, "focus-within:bg-")
+
+  defp normalize_class("focus-within:text-" <> color, acc),
+    do: color(acc, :focus_within_color, color, "focus-within:text-")
+
+  defp normalize_class("focus-within:border-" <> color, acc),
+    do: color(acc, :focus_within_border_color, color, "focus-within:border-")
+
+  defp normalize_class("focus-visible:bg-" <> color, acc),
+    do: color(acc, :focus_visible_background, color, "focus-visible:bg-")
+
+  defp normalize_class("focus-visible:text-" <> color, acc),
+    do: color(acc, :focus_visible_color, color, "focus-visible:text-")
+
+  defp normalize_class("focus-visible:border-" <> color, acc),
+    do: color(acc, :focus_visible_border_color, color, "focus-visible:border-")
+
+  defp normalize_class("focus-visible:opacity-" <> value, acc),
+    do: opacity(value, acc, :focus_visible_opacity, "focus-visible:opacity-")
+
+  defp normalize_class("focus:bg-" <> color, acc),
+    do: color(acc, :focus_background, color, "focus:bg-")
+
+  defp normalize_class("focus:text-" <> color, acc),
+    do: color(acc, :focus_color, color, "focus:text-")
+
+  defp normalize_class("focus:border-" <> color, acc),
+    do: color(acc, :focus_border_color, color, "focus:border-")
+
+  defp normalize_class("hover:opacity-" <> value, acc),
+    do: opacity(value, acc, :hover_opacity, "hover:opacity-")
+
+  defp normalize_class("focus-within:opacity-" <> value, acc),
+    do: opacity(value, acc, :focus_within_opacity, "focus-within:opacity-")
+
+  defp normalize_class("focus:opacity-" <> value, acc),
+    do: opacity(value, acc, :focus_opacity, "focus:opacity-")
+
+  defp normalize_class("shadow", acc), do: shadow(acc, "", "shadow")
+
+  defp normalize_class("shadow-[" <> rest, acc),
+    do: arbitrary_shadow(acc, rest, "shadow-[" <> rest)
+
+  defp normalize_class("shadow-" <> name = class, acc), do: shadow(acc, name, class)
   defp normalize_class("bg-" <> color, acc), do: color(acc, :background, color, "bg-")
   defp normalize_class("text-" <> size_or_color, acc), do: text(size_or_color, acc)
   defp normalize_class("leading-" <> value, acc), do: line_height(value, acc)
-  defp normalize_class("opacity-" <> value, acc), do: opacity(value, acc)
+  defp normalize_class("opacity-" <> value, acc), do: opacity(value, acc, :opacity, "opacity-")
   defp normalize_class(class, acc), do: unknown(acc, class)
 
   defp text(value, acc) do
@@ -264,20 +512,20 @@ defmodule GPUI.Tailwind do
     end
   end
 
-  defp opacity("[" <> _rest = value, acc) do
+  defp opacity("[" <> _rest = value, acc, key, prefix) do
     case parse_arbitrary_number(value) do
       {:ok, opacity} when opacity >= 0.0 and opacity <= 1.0 ->
-        put_style(acc, :opacity, opacity)
+        put_style(acc, key, opacity)
 
       _other ->
-        unknown(acc, "opacity-#{value}")
+        unknown(acc, prefix <> value)
     end
   end
 
-  defp opacity(value, acc) do
+  defp opacity(value, acc, key, prefix) do
     case Integer.parse(value) do
-      {opacity, ""} when opacity in 0..100 -> put_style(acc, :opacity, opacity / 100)
-      _other -> unknown(acc, "opacity-#{value}")
+      {opacity, ""} when opacity in 0..100 -> put_style(acc, key, opacity / 100)
+      _other -> unknown(acc, prefix <> value)
     end
   end
 
@@ -348,6 +596,34 @@ defmodule GPUI.Tailwind do
   end
 
   defp alpha_channel(percentage), do: round(255 * percentage / 100)
+
+  # `border-t`, `border-x-2` and `border-b-[1.5px]` set per-side widths; anything else is a colour.
+  defp border_side(rest) do
+    {side, width} =
+      case String.split(rest, "-", parts: 2) do
+        [side] -> {side, "1"}
+        [side, width] -> {side, width}
+      end
+
+    sides = %{
+      "t" => [:border_top_width],
+      "b" => [:border_bottom_width],
+      "l" => [:border_left_width],
+      "r" => [:border_right_width],
+      "x" => [:border_left_width, :border_right_width],
+      "y" => [:border_top_width, :border_bottom_width]
+    }
+
+    with {:ok, keys} <- Map.fetch(sides, side),
+         {:ok, px} <- border_width(width) do
+      {:ok, keys, {:px, px}}
+    end
+  end
+
+  defp border_width(width) when width in ["0", "1", "2", "4", "8"],
+    do: {:ok, :erlang.float(String.to_integer(width))}
+
+  defp border_width(width), do: parse_arbitrary_px(width)
 
   defp spacing(acc, key, value) do
     case parse_spacing(value) do
@@ -513,6 +789,33 @@ defmodule GPUI.Tailwind do
       _other -> :error
     end
   end
+
+  @rounded_corners %{
+    "t" => [:border_top_left_radius, :border_top_right_radius],
+    "b" => [:border_bottom_left_radius, :border_bottom_right_radius],
+    "l" => [:border_top_left_radius, :border_bottom_left_radius],
+    "r" => [:border_top_right_radius, :border_bottom_right_radius],
+    "tl" => [:border_top_left_radius],
+    "tr" => [:border_top_right_radius],
+    "bl" => [:border_bottom_left_radius],
+    "br" => [:border_bottom_right_radius]
+  }
+
+  # `rounded-t-lg`, `rounded-bl-[9px]` and `rounded-b` set some corners; `rounded-lg` sets all.
+  defp rounded_corners("-" <> rest = suffix) do
+    {side, value} =
+      case String.split(rest, "-", parts: 2) do
+        [side] -> {side, ""}
+        [side, value] -> {side, "-" <> value}
+      end
+
+    case Map.fetch(@rounded_corners, side) do
+      {:ok, keys} -> {keys, value}
+      :error -> {[:border_radius], suffix}
+    end
+  end
+
+  defp rounded_corners(suffix), do: {[:border_radius], suffix}
 
   defp rounded_radius("[" <> _rest = value) do
     case parse_arbitrary_px(value) do
